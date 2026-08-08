@@ -15,6 +15,11 @@ app/dist/
 outputs/*
 !outputs/*.md
 !outputs/.gitkeep
+# Runtime modules imported by server.py. Keep local crawls and test artifacts out.
 work/*
-!work/.gitkeep
+!work/__init__.py
+!work/dataset_run.py
+!work/dataset_run_outbox.py
+!work/validation_agent.py
+!work/review_store.py
 .DS_Store
