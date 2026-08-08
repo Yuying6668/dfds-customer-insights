@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
 COPY . /app
 
+ENV HOST=0.0.0.0
 ENV PORT=8766
 EXPOSE 8766
 

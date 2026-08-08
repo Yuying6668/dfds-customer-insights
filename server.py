@@ -3559,9 +3559,10 @@ def main():
     resume_dataset_run_outbox()
 
     port = int(os.environ.get("PORT", "8766"))
-    host = os.environ.get("HOST", "127.0.0.1")
+    # Render and other container platforms probe the public container interface.
+    host = os.environ.get("HOST", "0.0.0.0")
     server = ThreadingHTTPServer((host, port), Handler)
-    print(f"DFDS dashboard: http://127.0.0.1:{port}/")
+    print(f"DFDS dashboard listening on {host}:{port}")
     print(f"Database-backed Evidence Knowledge Base: {'ready' if database_ready else 'not connected'}")
     print("Set DEEPSEEK_API_KEY in .env or the shell for live LLM answers.")
     server.serve_forever()
