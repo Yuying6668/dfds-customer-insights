@@ -98,6 +98,8 @@ button {
 .login-form-wrap input::placeholder { color: #9aa7b6; }
 .login-form-wrap input:focus { border-color: #002b5c; box-shadow: 0 0 0 3px rgba(0,43,92,.12); }
 .login-error { margin: 18px 0 0; padding: 11px 14px; border-left: 3px solid #e4002b; color: #8a1026; background: #fff3f4; font-size: 13px; line-height: 1.4; }
+.login-success { margin: 18px 0 0; padding: 11px 14px; border-left: 3px solid #176b4d; color: #176b4d; background: #effaf5; font-size: 13px; line-height: 1.4; }
+.login-switch { margin-top: 14px; border: 0; background: transparent; color: #176b4d; cursor: pointer; font-size: 13px; }
 .login-submit { display: flex; width: 100%; height: 50px; align-items: center; justify-content: center; gap: 12px; margin-top: 27px; border: 0; border-radius: 5px; color: #fff; background: #e4002b; font-weight: 700; transition: background .15s, transform .15s; }
 .login-submit:hover { background: #c90025; transform: translateY(-1px); }
 

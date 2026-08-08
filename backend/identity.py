@@ -10,30 +10,27 @@ import re
 
 
 PASSWORD_ITERATIONS = 310_000
-USERNAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{1,63}$")
-REGISTRATION_USERNAME_PATTERN = re.compile(r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9._-]{4,64}$")
+USERNAME_PATTERN = re.compile(r"^[a-z]{3,32}$")
+REGISTRATION_USERNAME_PATTERN = re.compile(r"^[A-Za-z]{3,32}$")
 
 
 def normalize_username(value: object) -> str:
     username = str(value or "").strip().lower()
     if not USERNAME_PATTERN.fullmatch(username):
-        raise ValueError("Username must contain 2-64 lowercase letters, numbers, dots, underscores, or hyphens")
+        raise ValueError("User ID must contain only letters and be 3-32 characters long")
     return username
 
 
 def validate_registration_username(value: object) -> str:
     username = str(value or "").strip()
     if not REGISTRATION_USERNAME_PATTERN.fullmatch(username):
-        raise ValueError(
-            "Username must contain an uppercase letter, lowercase letter, and number; "
-            "use 4-64 letters, numbers, dots, underscores, or hyphens"
-        )
+        raise ValueError("User ID must contain only letters and be 3-32 characters long")
     return normalize_username(username)
 
 
 def hash_password(password: str) -> str:
-    if len(password) < 6:
-        raise ValueError("Password must contain at least 6 characters")
+    if not re.fullmatch(r"\d{6}", str(password or "")):
+        raise ValueError("Password must be exactly 6 digits")
     salt = os.urandom(16)
     derived = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, PASSWORD_ITERATIONS)
     return "pbkdf2_sha256${}${}${}".format(

@@ -35,6 +35,10 @@ CREATE TABLE IF NOT EXISTS upload_batches (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- owner_scope stores the owning app_users.id for file-level isolation.
+CREATE INDEX IF NOT EXISTS idx_upload_batches_owner_scope_created
+  ON upload_batches(owner_scope, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS uploaded_files (
   id UUID PRIMARY KEY,
   batch_id UUID NOT NULL REFERENCES upload_batches(id) ON DELETE CASCADE,
@@ -268,6 +272,8 @@ CREATE TABLE IF NOT EXISTS app_users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_app_users_username ON app_users(username);
 
 ALTER TABLE chat_sessions
   ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES app_users(id) ON DELETE RESTRICT;
@@ -503,6 +509,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_rag_usage_events_user_created ON rag_usage_events(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_summary_history_user_created ON user_summary_history(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_updated ON chat_sessions(user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_project_memories_layer_status ON project_memories(memory_layer, status);
 CREATE INDEX IF NOT EXISTS idx_project_memories_metadata_gin ON project_memories USING gin (metadata);
 CREATE INDEX IF NOT EXISTS idx_rag_evaluation_status ON rag_evaluation_items(status);

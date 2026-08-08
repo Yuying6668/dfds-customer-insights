@@ -2782,6 +2782,39 @@ def admin_conversation_logs(limit=100):
     return {"connected": True, "conversations": conversations}
 
 
+def user_history(identity, limit=100):
+    """Return only the authenticated user's own chat history."""
+    limit = max(1, min(int(limit), 500))
+    conn = connect_db()
+    if conn is None:
+        return {"connected": False, "history": []}
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT s.id AS session_id, s.active_view, s.route_focus, s.created_at,
+                       s.updated_at, COUNT(m.id) AS message_count,
+                       MAX(m.message_text) FILTER (WHERE m.role = 'user') AS last_message
+                FROM chat_sessions s
+                LEFT JOIN chat_messages m ON m.session_id = s.id
+                WHERE s.user_id = %s
+                GROUP BY s.id
+                ORDER BY s.updated_at DESC
+                LIMIT %s
+                """,
+                (identity["id"], limit),
+            )
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+    return {"connected": True, "history": [
+        {"sessionId": str(row["session_id"]), "activeView": row["active_view"], "routeFocus": row["route_focus"],
+         "createdAt": row["created_at"].isoformat(), "updatedAt": row["updated_at"].isoformat(),
+         "messageCount": int(row["message_count"]), "lastMessage": row["last_message"] or ""}
+        for row in rows
+    ]}
+
+
 def admin_observability():
     conn = connect_db()
     if conn is None:
@@ -3225,6 +3258,13 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/history":
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not identity:
+                self.send_json(401, {"error": "Sign in is required"})
+                return
+            self.send_json(200, user_history(identity))
+            return
         if parsed.path == "/api/health":
             self.send_json(200, {"status": "ok", "database": database_summary()})
             return
