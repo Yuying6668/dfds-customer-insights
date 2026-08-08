@@ -1,0 +1,26 @@
+.mia-cruise-mark {
+  display: block;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+}
+
+.login-brand .mia-cruise-mark {
+  flex-basis: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.app-brand-mark {
+  flex-basis: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+@media (max-width: 520px) {
+  .login-brand .mia-cruise-mark {
+    flex-basis: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}

@@ -1,0 +1,1817 @@
+{
+  "collectedAt": "2026-07-16",
+  "company": "DFDS",
+  "standardization": [
+    {
+      "label": "Languages detected",
+      "value": "Multilingual",
+      "detail": "Feedback may come from several markets. Original text is kept where available."
+    },
+    {
+      "label": "Reviews translated",
+      "value": "English view",
+      "detail": "Reviews can be shown in English while keeping the original wording."
+    },
+    {
+      "label": "Currencies aligned",
+      "value": "DKK",
+      "detail": "Price-related comments can be compared in one currency."
+    },
+    {
+      "label": "Ratings standardized",
+      "value": "Common scale",
+      "detail": "Different rating systems are made easier to compare."
+    }
+  ],
+  "sentimentMix": [
+    {
+      "label": "Positive",
+      "value": 76,
+      "color": "#217a52",
+      "note": "4-5 star Trustpilot reviews"
+    },
+    {
+      "label": "Neutral",
+      "value": 10,
+      "color": "#d18b1f",
+      "note": "3-star Trustpilot reviews"
+    },
+    {
+      "label": "Negative",
+      "value": 14,
+      "color": "#b73535",
+      "note": "1-2 star Trustpilot reviews"
+    }
+  ],
+  "routeInsights": {
+    "all": {
+      "title": "All signals",
+      "status": "All sources",
+      "reason": "These routes are not the full DFDS network. They are the routes where this dashboard currently has public signals.",
+      "risk": "App friction, disruption communication, and unclear journey expectations.",
+      "action": "Prioritize app reliability, route-specific messaging, and disruption communication."
+    },
+    "dover-calais": {
+      "title": "Dover-Calais",
+      "status": "Public delay signal",
+      "reason": "Selected because public reporting and Reddit discussion surfaced delay, border-control, and ticket-rule signals.",
+      "risk": "Pre-boarding uncertainty and price-rule confusion.",
+      "action": "Clarify delay guidance, border-control timing, and ticket conditions before purchase."
+    },
+    "newhaven-dieppe": {
+      "title": "Newhaven-Dieppe",
+      "status": "Incident recovery signal",
+      "reason": "Selected because public reporting mentioned passenger compensation after an onboard incident.",
+      "risk": "Weak disruption recovery can become a brand story.",
+      "action": "Create a route-specific incident recovery and compensation communication playbook."
+    },
+    "newcastle-ijmuiden": {
+      "title": "Newcastle-IJmuiden",
+      "status": "App feature signal",
+      "reason": "Selected because a recent Apple App Store review mentions mobile check-in being unavailable on this route.",
+      "risk": "Customers may expect app features that do not exist on their route.",
+      "action": "Show route-level app feature availability before customers rely on mobile check-in."
+    },
+    "jersey": {
+      "title": "Jersey / Channel Islands",
+      "status": "Market trust signal",
+      "reason": "Selected because public coverage surfaced Jersey service-level and freight-pricing concerns.",
+      "risk": "A local service issue can be hidden by the all-company average.",
+      "action": "Track Jersey separately and report service confidence as its own market lens."
+    }
+  },
+  "sourceCoverage": [
+    {
+      "source": "Trustpilot",
+      "logo": "https://cdn.simpleicons.org/trustpilot/00B67A",
+      "status": "Collected",
+      "records": "20,646 reviews",
+      "insight": "Broad ferry-service perception, staff/service positives, and journey friction themes."
+    },
+    {
+      "source": "Google Play Reviews",
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Google_Play_2022_logo.svg",
+      "status": "Rating found",
+      "records": "64 Android reviews",
+      "insight": "DFDS - Passenger shows a weaker Android rating than the overall DFDS brand score."
+    },
+    {
+      "source": "Apple App Store Reviews",
+      "logo": "https://cdn.simpleicons.org/apple/000000",
+      "status": "Collected",
+      "records": "10 GB ratings; 5 recent public review entries",
+      "insight": "Recent reviews highlight account login, booking retrieval, and route feature availability problems."
+    },
+    {
+      "source": "Google Reviews",
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg",
+      "status": "Location profiles collected",
+      "records": "4 Google location profiles",
+      "insight": "Collected at terminal/location level for Dover-Calais, Newhaven-Dieppe, and Newcastle-IJmuiden signals."
+    },
+    {
+      "source": "Reddit",
+      "logo": "https://cdn.simpleicons.org/reddit/FF4500",
+      "status": "Discussion signals found",
+      "records": "2 relevant discussion signals",
+      "insight": "Reddit is used here for travel questions and comments, not star-rated reviews."
+    },
+    {
+      "source": "Survey CSV",
+      "logo": "",
+      "status": "Upload later",
+      "records": "No survey uploaded",
+      "insight": "Future survey results can be compared with the public sources."
+    },
+    {
+      "source": "Synthetic Passenger Profile PG",
+      "logo": "",
+      "status": "Ready",
+      "records": "1,000 synthetic passengers; 1,800 synthetic trips",
+      "insight": "Star-schema passenger profile data for route affinity, segment, product preference, travel-context, and ACTAR analysis."
+    }
+  ],
+  "appStores": [
+    {
+      "platform": "Google Play",
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Google_Play_2022_logo.svg",
+      "app": "DFDS - Passenger",
+      "package": "com.dfds.pax",
+      "rating": "2.5 / 5",
+      "normalized": 50,
+      "reviewCount": "64 reviews",
+      "status": "Rating found",
+      "url": "https://play.google.com/store/apps/details?id=com.dfds.pax&hl=en&gl=GB",
+      "summary": "The Android app score is much weaker than DFDS' overall brand review score."
+    },
+    {
+      "platform": "Apple App Store",
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+      "app": "DFDS - Passenger",
+      "package": "com.dfds.pax",
+      "rating": "3.3 / 5",
+      "normalized": 66,
+      "reviewCount": "10 ratings",
+      "status": "Rating + reviews found",
+      "url": "https://apps.apple.com/gb/app/dfds-passenger/id6474616110",
+      "summary": "Recent iOS reviews point to app reliability and usefulness issues."
+    }
+  ],
+  "googleReviewLocations": [
+    {
+      "name": "DFDS Calais - Ferry Terminal & Office",
+      "route": "dover-calais",
+      "rating": "4.2 / 5",
+      "reviews": "2,331 Google reviews",
+      "source": "Wanderlog / Google",
+      "url": "https://wanderlog.com/place/details/1574638/dfds-calais-ferry-terminal--office",
+      "signal": "Efficient service, cleanliness, on-time departures, smooth boarding, and premium lounge value are positive signals."
+    },
+    {
+      "name": "DFDS Dover - Office & Ferry Terminal",
+      "route": "dover-calais",
+      "rating": "4.3 / 5",
+      "reviews": "47 Google reviews",
+      "source": "Wanderlog / Google",
+      "url": "https://wanderlog.com/place/details/12640587/dfds-dover-office--ferry-terminal",
+      "signal": "Positive crossing experience and helpful staff, with some friction around signage, food value, and safety/traffic clarity."
+    },
+    {
+      "name": "DFDS Transmanche Ferries, Newhaven",
+      "route": "newhaven-dieppe",
+      "rating": "4.2 / 5",
+      "reviews": "478 Google reviews",
+      "source": "Wanderlog / Google",
+      "url": "https://wanderlog.com/place/details/8211168/dfds-transmanche-ferries",
+      "signal": "Easy booking/check-in, good onboard food, smooth crossing, and staff service are strengths; land-side terminal condition appears weaker."
+    },
+    {
+      "name": "DFDS | Newcastle",
+      "route": "newcastle-ijmuiden",
+      "rating": "4.4 / 5",
+      "reviews": "346 Google reviews",
+      "source": "Wanderlog / Google",
+      "url": "https://wanderlog.com/place/details/10251667",
+      "signal": "Excellent customer service, cabins, onboard entertainment, family/pet facilities, and mini-cruise experience are strong positives."
+    }
+  ],
+  "appReviewEvidence": [
+    {
+      "platform": "Apple App Store",
+      "date": "2026-07-06",
+      "rating": "1 / 5",
+      "title": "Account handoff failure",
+      "theme": "Login and account continuity",
+      "evidence": "The review says the app redirects to DFDS.com and then does not accept account credentials.",
+      "businessMeaning": "Customers trying to manage travel digitally may lose trust before they reach the ferry experience."
+    },
+    {
+      "platform": "Apple App Store",
+      "date": "2026-06-23",
+      "rating": "1 / 5",
+      "title": "Route feature gap",
+      "theme": "Mobile check-in availability",
+      "evidence": "The reviewer says mobile check-in was unavailable for the Newcastle to IJmuiden route.",
+      "businessMeaning": "Feature availability needs route-level messaging so customers do not expect unsupported digital services."
+    },
+    {
+      "platform": "Apple App Store",
+      "date": "2026-06-16",
+      "rating": "1 / 5",
+      "title": "Booking retrieval failure",
+      "theme": "Booking visibility",
+      "evidence": "The reviewer says a booking disappeared and re-adding it returned an unauthorized-access message.",
+      "businessMeaning": "Booking visibility is a high-stakes digital trust issue because it affects travel confidence."
+    },
+    {
+      "platform": "Apple App Store",
+      "date": "2026-06-15",
+      "rating": "4 / 5",
+      "title": "Useful when it works",
+      "theme": "Travel convenience",
+      "evidence": "A positive review describes the app as handy for travel.",
+      "businessMeaning": "The app has a clear customer value proposition if reliability problems are reduced."
+    },
+    {
+      "platform": "Apple App Store",
+      "date": "2026-03-22",
+      "rating": "1 / 5",
+      "title": "Repeated login loop",
+      "theme": "Authentication reliability",
+      "evidence": "The reviewer describes repeated login loops despite valid credentials and reinstall attempts.",
+      "businessMeaning": "Authentication issues can convert an otherwise useful travel app into a support burden."
+    }
+  ],
+  "rootCauses": [
+    {
+      "title": "Delay recovery and disruption handling",
+      "confidence": "High",
+      "impact": "High",
+      "summary": "Recent public signals repeatedly mention long delays, disputed compensation, unclear refund handling, and communication gaps during disruption."
+    },
+    {
+      "title": "Onboard experience inconsistency",
+      "confidence": "Medium",
+      "impact": "Medium",
+      "summary": "Trustpilot review themes include staff and service as positives, while cabins, food quality, and boarding experience appear as recurring negatives."
+    },
+    {
+      "title": "Route-specific trust risk in Jersey services",
+      "confidence": "Medium",
+      "impact": "High",
+      "summary": "Public coverage around Jersey and Channel Islands ferry services shows concerns about service quality, freight pricing, disruption, and market expectations."
+    },
+    {
+      "title": "Passenger app authentication and booking access",
+      "confidence": "High",
+      "impact": "High",
+      "summary": "Apple App Store evidence and Google Play rating details show the DFDS Passenger app is a lower-rated channel, with recent complaints around login, booking visibility, account handoff, and mobile check-in expectations."
+    }
+  ],
+  "signals": [
+    {
+      "route": "all",
+      "source": "Trustpilot",
+      "theme": "Overall brand perception is strong but uneven",
+      "sentiment": "Mixed-positive",
+      "journeyStage": "Post-trip evaluation",
+      "evidence": "DFDS holds a 4.2/5 Trustpilot score from 20,646 reviews, with 53% 5-star and 9% 1-star ratings.",
+      "businessMeaning": "DFDS has enough public goodwill to protect, but negative experiences are visible and specific enough to influence route-level choice."
+    },
+    {
+      "route": "all",
+      "source": "Trustpilot",
+      "theme": "Staff and service are brand strengths",
+      "sentiment": "Positive",
+      "journeyStage": "Onboard experience",
+      "evidence": "Trustpilot's review summary highlights positive themes around service, friendly staff, comfort, and overall satisfaction.",
+      "businessMeaning": "Marketing can credibly lean into human service quality if operational weak spots are not ignored."
+    },
+    {
+      "route": "all",
+      "source": "Trustpilot",
+      "theme": "Boarding, cabins, and food are friction points",
+      "sentiment": "Negative",
+      "journeyStage": "Boarding and onboard experience",
+      "evidence": "Trustpilot's negative review summary highlights issues with cabins, food quality, customer service, disembarkation, border control, and delays.",
+      "businessMeaning": "These are not abstract complaints; they map directly to journey moments that shape repeat purchase and recommendation."
+    },
+    {
+      "route": "newhaven-dieppe",
+      "source": "The Guardian",
+      "theme": "Compensation and incident recovery risk",
+      "sentiment": "Negative",
+      "journeyStage": "Disruption recovery",
+      "evidence": "Public reporting described Newhaven-Dieppe passengers seeking compensation after an onboard incident and disrupted journey experience.",
+      "businessMeaning": "DFDS should treat unusual disruption handling as a brand-protection issue, not only an operations issue."
+    },
+    {
+      "route": "dover-calais",
+      "source": "BBC",
+      "theme": "Delay communication pressure",
+      "sentiment": "Negative",
+      "journeyStage": "Pre-boarding and border control",
+      "evidence": "BBC reporting around Dover delays includes DFDS advice for passengers to allow extra time because of passport control queues.",
+      "businessMeaning": "Delay messaging needs to be proactive, route-specific, and framed as customer protection."
+    },
+    {
+      "route": "dover-calais",
+      "source": "Google Reviews",
+      "theme": "Terminal experience is a marketing proof point",
+      "sentiment": "Positive",
+      "journeyStage": "Terminal and boarding",
+      "evidence": "Public Google location profiles show DFDS Calais at 4.2/5 from 2,331 reviews and DFDS Dover at 4.3/5 from 47 reviews.",
+      "businessMeaning": "Dover-Calais messaging can use terminal efficiency and staff service as proof points, while still addressing signage and food-value friction."
+    },
+    {
+      "route": "jersey",
+      "source": "BBC / local public reporting",
+      "theme": "Channel Islands service confidence",
+      "sentiment": "Negative",
+      "journeyStage": "Market trust",
+      "evidence": "Public reporting has covered Jersey concerns around DFDS ferry service levels, freight prices, and service disruption.",
+      "businessMeaning": "Jersey should be monitored as a distinct market perception risk rather than blended into all-DFDS averages."
+    },
+    {
+      "route": "newhaven-dieppe",
+      "source": "Google Reviews",
+      "theme": "Crossing experience is stronger than terminal impression",
+      "sentiment": "Mixed-positive",
+      "journeyStage": "Check-in, onboard, and terminal",
+      "evidence": "The Newhaven DFDS Transmanche Google location profile shows 4.2/5 from 478 reviews, with positive signals around booking, check-in, onboard food, crossing comfort, and staff service.",
+      "businessMeaning": "Marketing can highlight the crossing and onboard experience, while terminal-condition concerns should be treated as a journey-expectation gap."
+    },
+    {
+      "route": "newcastle-ijmuiden",
+      "source": "Google Reviews",
+      "theme": "Mini-cruise and onboard service are strong positives",
+      "sentiment": "Positive",
+      "journeyStage": "Onboard experience",
+      "evidence": "The DFDS Newcastle Google location profile shows 4.4/5 from 346 reviews, with positive signals around customer service, cabins, entertainment, family/pet facilities, and mini-cruise experience.",
+      "businessMeaning": "Newcastle-IJmuiden marketing should lean into onboard experience, service quality, and short-break value."
+    },
+    {
+      "route": "all",
+      "source": "Apple App Store",
+      "theme": "Passenger app login and booking access are visible pain points",
+      "sentiment": "Negative",
+      "journeyStage": "Digital pre-trip",
+      "evidence": "Recent Apple GB reviews mention failed account credentials, disappeared bookings, unauthorized-access messages, and login loops.",
+      "businessMeaning": "App problems can reduce customer confidence before the trip even starts."
+    },
+    {
+      "route": "newcastle-ijmuiden",
+      "source": "Apple App Store",
+      "theme": "Mobile check-in expectation mismatch",
+      "sentiment": "Negative",
+      "journeyStage": "Digital pre-trip",
+      "evidence": "A recent Apple review says mobile check-in was not available for Newcastle to IJmuiden.",
+      "businessMeaning": "Route-specific digital feature availability should be explicit before customers download or rely on the app."
+    },
+    {
+      "route": "all",
+      "source": "Google Play",
+      "theme": "Android app perception is weaker than brand perception",
+      "sentiment": "Negative",
+      "journeyStage": "Digital pre-trip",
+      "evidence": "The Google Play GB page for DFDS - Passenger shows 2.5/5 from 64 reviews.",
+      "businessMeaning": "The Android channel should be treated as its own customer-experience risk, not hidden inside general brand sentiment."
+    },
+    {
+      "route": "dover-calais",
+      "source": "Reddit",
+      "theme": "Ticket-rule and fare-arbitrage confusion",
+      "sentiment": "Mixed",
+      "journeyStage": "Booking consideration",
+      "evidence": "A recent Reddit travel thread asks what happens if a DFDS Short Break return ticket is used only one way because it is cheaper than a one-way fare.",
+      "businessMeaning": "Pricing and ticket-condition messaging may be creating confusion or arbitrage behavior before purchase."
+    },
+    {
+      "route": "all",
+      "source": "Reddit",
+      "theme": "Ferry choice competes with faster transport alternatives",
+      "sentiment": "Mixed",
+      "journeyStage": "Travel planning",
+      "evidence": "Reddit travel discussions compare DFDS-style ferry journeys with flying, train, bus, Eurotunnel, and competitor ferry options.",
+      "businessMeaning": "Marketing should position the ferry around comfort, flexibility, vehicle access, and experience rather than speed alone."
+    }
+  ],
+  "voiceThemes": [
+    {
+      "routes": [
+        "all",
+        "newcastle-ijmuiden"
+      ],
+      "theme": "App and booking friction",
+      "sentiment": "Negative",
+      "sources": [
+        "Apple App Store",
+        "Google Play"
+      ],
+      "routeLabel": "All routes; strongest signal on Newcastle-IJmuiden",
+      "customerMeaning": "Some customers struggle before the trip starts because login, booking retrieval, and route feature availability are unclear.",
+      "marketingAction": "Be cautious about promoting mobile self-service until login, booking visibility, and route feature messaging improve.",
+      "evidence": [
+        "Google Play GB shows DFDS - Passenger at 2.5/5 from 64 reviews.",
+        "Apple GB App Store shows 3.3/5 from 10 ratings.",
+        "Recent Apple reviews mention login loops, missing bookings, and mobile check-in not available on Newcastle-IJmuiden."
+      ]
+    },
+    {
+      "routes": [
+        "all",
+        "dover-calais",
+        "newhaven-dieppe",
+        "newcastle-ijmuiden"
+      ],
+      "theme": "Terminal and boarding proof points",
+      "sentiment": "Positive",
+      "sources": [
+        "Google Reviews"
+      ],
+      "routeLabel": "Dover-Calais, Newhaven-Dieppe, Newcastle-IJmuiden",
+      "customerMeaning": "Location-level Google Reviews show useful strengths around terminal service, boarding flow, staff, and crossing experience.",
+      "marketingAction": "Use terminal efficiency, staff service, and route-specific location strengths as proof points in campaign copy.",
+      "evidence": [
+        "DFDS Calais: 4.2/5 from 2,331 Google reviews.",
+        "DFDS Dover: 4.3/5 from 47 Google reviews.",
+        "DFDS Newhaven: 4.2/5 from 478 Google reviews.",
+        "DFDS Newcastle: 4.4/5 from 346 Google reviews."
+      ]
+    },
+    {
+      "routes": [
+        "all",
+        "dover-calais",
+        "newhaven-dieppe"
+      ],
+      "theme": "Disruption communication",
+      "sentiment": "Negative",
+      "sources": [
+        "Trustpilot",
+        "BBC",
+        "The Guardian"
+      ],
+      "routeLabel": "Dover-Calais and Newhaven-Dieppe",
+      "customerMeaning": "Delays, compensation, border-control queues, and recovery handling can quickly become brand trust issues.",
+      "marketingAction": "Prepare clearer disruption messaging before, during, and after travel so customers feel guided rather than surprised.",
+      "evidence": [
+        "Trustpilot negative themes include delays and customer service friction.",
+        "BBC reporting surfaced Dover delay and passport-control queue pressure.",
+        "Guardian reporting surfaced Newhaven-Dieppe compensation concerns after an onboard incident."
+      ]
+    },
+    {
+      "routes": [
+        "all"
+      ],
+      "theme": "Staff and onboard service strength",
+      "sentiment": "Positive",
+      "sources": [
+        "Trustpilot",
+        "Google Reviews"
+      ],
+      "routeLabel": "All public signals",
+      "customerMeaning": "Staff friendliness, onboard support, and service quality appear as positive brand assets.",
+      "marketingAction": "Use people-led service quality as a brand strength, especially when paired with honest route and disruption messaging.",
+      "evidence": [
+        "Trustpilot summary highlights service, friendly staff, comfort, and satisfaction.",
+        "Google location profiles for Dover-Calais, Newhaven, and Newcastle include positive service signals."
+      ]
+    },
+    {
+      "routes": [
+        "all",
+        "jersey"
+      ],
+      "theme": "Channel Islands trust risk",
+      "sentiment": "Negative",
+      "sources": [
+        "BBC / local public reporting"
+      ],
+      "routeLabel": "Jersey / Channel Islands",
+      "customerMeaning": "Jersey-related service and freight-pricing concerns are market-specific and should not be hidden inside DFDS averages.",
+      "marketingAction": "Track Channel Islands separately and avoid using all-company performance as a proxy for local confidence.",
+      "evidence": [
+        "Public reporting surfaced Jersey ferry service-level concerns.",
+        "Public reporting also surfaced freight-pricing and disruption concerns."
+      ]
+    },
+    {
+      "routes": [
+        "all",
+        "dover-calais"
+      ],
+      "theme": "Ticket rules and alternative choices",
+      "sentiment": "Mixed",
+      "sources": [
+        "Reddit"
+      ],
+      "routeLabel": "Dover-Calais",
+      "customerMeaning": "Some customers compare ferry options against price rules, one-way fares, Eurotunnel, flights, and other alternatives.",
+      "marketingAction": "Make fare rules and value propositions easier to understand before purchase.",
+      "evidence": [
+        "A Reddit travel thread asks about using a DFDS Short Break return ticket one way because it is cheaper than a one-way fare.",
+        "Reddit discussions compare ferry travel with flying, train, bus, Eurotunnel, and competitor ferry options."
+      ]
+    }
+  ],
+  "competitors": [
+    {
+      "company": "DFDS",
+      "category": "DFDS baseline",
+      "score": "4.2",
+      "normalized": 84,
+      "reviews": "20,646",
+      "userView": "Strong overall brand review base, with visible friction around disruption recovery and digital pre-trip experience.",
+      "routes": "Dover-Calais, Newhaven-Dieppe, Newcastle-IJmuiden, Copenhagen-Oslo, Baltic/North Sea routes, Channel Islands services.",
+      "overlap": "This is the company being compared.",
+      "learning": "Protect service strengths while fixing app reliability and disruption communication."
+    },
+    {
+      "company": "P&O Ferries",
+      "category": "Same route competitor",
+      "score": "4.1",
+      "normalized": 82,
+      "reviews": "40,457",
+      "userView": "Large public review base and close Trustpilot score to DFDS.",
+      "routes": "Dover-Calais, Hull-Rotterdam, Larne-Cairnryan.",
+      "overlap": "Competes with DFDS on Dover-Calais and nearby North Sea travel choices.",
+      "learning": "Benchmark high-volume Channel operations and disruption handling."
+    },
+    {
+      "company": "Irish Ferries",
+      "category": "Same route competitor",
+      "score": "2.5",
+      "normalized": 50,
+      "reviews": "979",
+      "userView": "Weaker visible public review score in this snapshot.",
+      "routes": "Dover-Calais, Dublin-Holyhead, Rosslare-Pembroke, Ireland-France routes.",
+      "overlap": "Competes with DFDS on Dover-Calais.",
+      "learning": "DFDS can position around reliability and care where review perception is stronger."
+    },
+    {
+      "company": "Condor Ferries",
+      "category": "Same regional market",
+      "score": "2.0",
+      "normalized": 40,
+      "reviews": "147",
+      "userView": "Low public Trustpilot score in this snapshot, with Channel Islands service confidence visible as a risk area.",
+      "routes": "Jersey, Guernsey, UK, and France Channel Islands services.",
+      "overlap": "Jersey / Channel Islands market overlap.",
+      "learning": "Track island-market trust, freight sensitivity, and disruption recovery separately."
+    },
+    {
+      "company": "Stena Line",
+      "category": "Nearby market competitor",
+      "score": "4.3",
+      "normalized": 86,
+      "reviews": "4,035",
+      "userView": "Slightly stronger visible Trustpilot score than DFDS UK profile.",
+      "routes": "Irish Sea, North Sea, Scandinavia, Baltic Sea routes.",
+      "overlap": "Competes for similar UK-Europe and North Sea travel demand.",
+      "learning": "Study route communication and service consistency in multi-market operations."
+    },
+    {
+      "company": "Brittany Ferries",
+      "category": "Nearby leisure competitor",
+      "score": "4.5",
+      "normalized": 90,
+      "reviews": "89,082",
+      "userView": "Highest visible benchmark score in the current public snapshot.",
+      "routes": "UK-France, UK-Spain, Ireland-France routes.",
+      "overlap": "Competes for similar UK-France leisure travel decisions.",
+      "learning": "Use as premium onboard and leisure-experience comparator."
+    },
+    {
+      "company": "Scandlines",
+      "category": "Nearby Nordic competitor",
+      "score": "1.5",
+      "normalized": 30,
+      "reviews": "2,000+",
+      "userView": "Low public Trustpilot score in the Denmark profile, with safety and service concerns visible in snippets.",
+      "routes": "Puttgarden-Rodby, Rostock-Gedser.",
+      "overlap": "Competes in nearby Denmark-Germany ferry travel.",
+      "learning": "Benchmark short-route frequency, boarding flow, and terminal experience."
+    },
+    {
+      "company": "Color Line",
+      "category": "Nearby Nordic competitor",
+      "score": "2.5",
+      "normalized": 50,
+      "reviews": "393",
+      "userView": "Weak public Trustpilot score in the Norway profile, with enough review volume to treat as a visible passenger signal.",
+      "routes": "Norway-Denmark and Norway-Germany routes.",
+      "overlap": "Competes for Nordic ferry and mini-cruise demand.",
+      "learning": "Benchmark onboard experience, cabins, food, and leisure positioning."
+    },
+    {
+      "company": "Fjord Line",
+      "category": "Nearby Nordic competitor",
+      "score": "4.2",
+      "normalized": 84,
+      "reviews": "1,079",
+      "userView": "Strong public score for the main international profile, with positive signals around Denmark-Norway trips.",
+      "routes": "Denmark-Norway routes including Hirtshals connections.",
+      "overlap": "Competes for Nordic passenger ferry demand.",
+      "learning": "Benchmark leisure journey design and route-specific seasonal messaging."
+    },
+    {
+      "company": "TT-Line",
+      "category": "Nearby Baltic competitor",
+      "score": "2.5",
+      "normalized": 50,
+      "reviews": "10,000+",
+      "userView": "Large public review base but weak Trustpilot score, useful for comparing mixed passenger and freight route expectations.",
+      "routes": "Germany-Sweden, Poland-Sweden, Lithuania-Sweden routes.",
+      "overlap": "Competes in nearby Baltic and Northern Europe ferry travel.",
+      "learning": "Benchmark mixed passenger/freight route communication."
+    },
+    {
+      "company": "Tallink Silja",
+      "category": "Nearby Baltic competitor",
+      "score": "1.5",
+      "normalized": 30,
+      "reviews": "98",
+      "userView": "Low public Trustpilot score in this snapshot, while travel-platform summaries still mention efficient service and modern ships.",
+      "routes": "Finland-Estonia, Finland-Sweden, Estonia-Sweden routes.",
+      "overlap": "Competes for Baltic Sea leisure ferry demand.",
+      "learning": "Benchmark onboard retail, entertainment, and loyalty experience."
+    },
+    {
+      "company": "Viking Line",
+      "category": "Nearby Baltic competitor",
+      "score": "2.5",
+      "normalized": 50,
+      "reviews": "45",
+      "userView": "Small public Trustpilot review base with a weak score, so it should be read as a directional signal rather than a full market view.",
+      "routes": "Finland-Sweden, Finland-Estonia, Aland routes.",
+      "overlap": "Competes for Baltic Sea leisure ferry demand.",
+      "learning": "Benchmark route-level digital booking and onboard value propositions."
+    }
+  ],
+  "competitorScope": {
+    "title": "Competitor scope",
+    "bullets": [
+      "12 ferry brands are included in this comparison view: DFDS plus 11 potential competitors.",
+      "The comparison focuses on passenger ferry customers, not DFDS freight or logistics customers.",
+      "The first priority is direct route competition, especially Dover-Calais and Channel Islands services.",
+      "The second priority is nearby regional competition in the UK-Europe, Nordic, and Baltic ferry markets.",
+      "A company is included when customers may compare it with DFDS by route, geography, passenger segment, or travel purpose.",
+      "Previous score gaps have been filled with public Trustpilot search-result evidence. These competitor snapshots should be refreshed regularly."
+    ]
+  },
+  "supervisorLogs": [
+    {
+      "time": "2026-07-28 10:30",
+      "module": "IT Data Flow and Platform Memory Architecture",
+      "change": "Added a dedicated IT Data Flow page and platform-wide short / medium / long-term memory structure",
+      "reason": "The user wanted a technical view next to Data Basis, plus a shared memory architecture that Mia and the rest of the platform can reuse.",
+      "scope": "IT Data Flow route, Data Basis technical link, dashboard context, local knowledge base, project memories, update logs, daily logs, and UI styling",
+      "result": "The platform now treats IT Data Flow as a separate operational page, exposes a shared memory model across the whole product, and gives Mia access to the new flow and memory context.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-23 21:58",
+      "module": "Google Location Progress Bar Accuracy",
+      "change": "Corrected the rendered proportions in Google Reviews by ferry location",
+      "reason": "The location metric row selector also applied its grid layout to nested progress tracks, so rating fills such as 84% rendered at only about one third of the full track.",
+      "scope": "Overview Google location rating and review-volume bars, responsive CSS, regression test, production dist",
+      "result": "Progress fills now use the complete track width: ratings render at 84%, 86%, 84%, and 88%, while review-volume bars remain proportional to the largest location count.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-23 00:18",
+      "module": "Mia Conversational Routing and Answer Surface Cleanup",
+      "change": "Made Mia treat acknowledgements as small talk and removed visible evidence labels from the default answer surface",
+      "reason": "The user wanted normal conversational replies for OK / got it / thanks / MIA messages, a cleaner user-facing answer without Short answer or Evidence used labels, and a friendlier thinking state and user label.",
+      "scope": "Chat intent routing, user-facing answer formatting, evidence-card visibility, language detection, chat drawer expansion, responsive styles, backend and frontend fallback paths",
+      "result": "Mia now routes short acknowledgements into thanks / small talk, replies in the detected input language, hides evidence by default unless the user explicitly asks for it, strips legacy Short answer / Evidence used labels before display, offers a larger expandable chat drawer with Enter-to-send behavior, and the rebuilt production dist now serves those changes in the browser.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 21:12",
+      "module": "Mia Composer and Customer Voice Badge Polish",
+      "change": "Expanded Mia's question composer and centered Customer Voice priority badges",
+      "reason": "The user reported that suggested Mia questions could not be read without scrolling inside the input, and that the High attention badge in Customer Voice looked visually off-center.",
+      "scope": "Mia chat drawer width, textarea autosizing, suggested tag fill behavior, Customer Voice priority pill alignment, production dist",
+      "result": "Mia now opens with a wider drawer and a taller autosizing textarea, while High attention badges keep their text centered inside the red priority pill.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 20:09",
+      "module": "Mia Launcher and Focus Tags",
+      "change": "Changed Mia to open collapsed by default and replaced long suggested questions with compact focus tags",
+      "reason": "The user wanted the Q&A system to stay out of the way when the dashboard opens, and wanted only a few keyword prompts at the bottom instead of expanded long suggested questions.",
+      "scope": "Mia chat launcher, focus tag prompts, chat drawer prompt styling, Update Log, production dist",
+      "result": "The dashboard now opens with only the Ask Mia launcher visible; opening Mia shows compact tags for App risk, Route priority, Dover-Calais, Competitors, Marketing actions, and Evidence gaps, each still mapping to a useful report question.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 19:51",
+      "module": "Final 8766 UI QA and App Review Alignment",
+      "change": "Completed the final source-level UI polish and live browser QA on the restored 8766 dashboard",
+      "reason": "The first polish pass fixed the major regressions, but live screenshots still showed App Reviews platform text being squeezed and source logo sizing needed one more stable pass.",
+      "scope": "App Reviews top-row alignment, source logo dimensions and spacing, competitor filter width, route-focus regression check, live 8766 smoke validation",
+      "result": "App Reviews now keeps each platform card in one row with the logo and rating aligned at the top, Main data sources use compact 24x20 marks with a 12px title gap, Competitors keeps a 220px filter with an 8-column sticky benchmark table, and Overview route focus remains stable without the old ui-restore layer.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 19:28",
+      "module": "Dashboard UI Polish and Route Focus Stability",
+      "change": "Rebuilt the React dashboard with route-focus stability fixes, priority ordering, tighter source/app layouts, and a shorter competitor filter",
+      "reason": "The user reported that Overview route focus could blank the page, Customer Voice was not visually strong enough, Recommendations needed urgent-priority ordering, App Reviews had too much empty space, Main data source logos were cramped against text, and the Competitors filter input was too long.",
+      "scope": "Overview route focus behavior, Main data sources spacing, Customer Voice priority ordering and card layout, App Reviews compact store cards, Recommendations priority sort, Competitors filter width, Vite production dist",
+      "result": "The production dist now loads the rebuilt React bundle without the old ui-restore DOM mutation layer, route focus changes no longer blank the page, high-priority recommendations appear first, Customer Voice starts with high-attention signals, app ratings sit with store logos, and the competitor filter is compact.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 18:18",
+      "module": "UI Restoration Follow-up",
+      "change": "Tightened the restored DFDS UI after live browser QA showed remaining navigation borders, oversized source logos, and weak benchmark sticky-row visibility",
+      "reason": "The user confirmed that the sidebar still looked underlined, Trustpilot-style source icons still looked too large, and the competitor table controls and frozen DFDS row were not clear enough in the live 8766 page.",
+      "scope": "Sidebar navigation border styling, Main data sources logo sizing and spacing, App Reviews store logo sizing, Ferry benchmark table scroll height, sticky header, sticky DFDS baseline row, live dist restore layer, cache-busting version",
+      "result": "The live 8766 page now removes the nav border lines, reduces source logos to compact report-scale marks, makes App store logos smaller, and strengthens the benchmark table's filter/sort and frozen baseline presentation.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 16:55",
+      "module": "Approved UI Restoration",
+      "change": "Restored the approved DFDS report-style UI patterns after the React route split changed several dashboard sections",
+      "reason": "The user reported that the live 8766 frontend no longer matched the previously approved UI: All signals looked different, source logos were too large or cramped, the two app store cards were no longer aligned, the competitor benchmark missed filter and DFDS sticky baseline behavior, and sidebar links showed underlines.",
+      "scope": "Overview route lens, Main data sources card spacing and logos, Customer temperature bar, App Reviews store cards, Ferry benchmark table filter/sort and DFDS sticky first row, sidebar navigation styling, cache-busting versions",
+      "result": "The formal React source and live dist restore layer now preserve the earlier DFDS annual-report-inspired dashboard behavior while keeping the URL-based route shell.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 00:55",
+      "module": "React Route Split",
+      "change": "Replaced the report shell with URL-based React subroutes for the major DFDS report sections",
+      "reason": "The user asked for the Overview, Customer Voice, App Reviews, Competitors, Recommendations, Survey CSV, Update Log, Data Basis, and Review Console views to become separate subroutes instead of page-level tabs.",
+      "scope": "React shell, route components, URL navigation, SPA fallback, cache-busting versioning",
+      "result": "The dashboard now has route-owned sections with dedicated route components, and the browser can open each report page by path.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 00:50",
+      "module": "Chat Auto Validation Hook",
+      "change": "Attached the live /api/chat response flow to the validation harness",
+      "reason": "Every real Mia reply should generate a review item automatically so the Review Console can catch regressions in route detection, small-talk routing, source labeling, and language handling without waiting for manual test runs.",
+      "scope": "server.py /api/chat flow, validation harness invocation, validation metadata on chat responses, daily logs",
+      "result": "Each successful chat turn now produces a validation run and review item alongside the normal answer, and the response includes validation metadata for internal inspection.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-22 00:40",
+      "module": "Validation Harness Agent",
+      "change": "Added a deterministic validation agent and backend review-run endpoint",
+      "reason": "The internal review console needs real validation items, not only seeded examples, so agent outputs can be checked for route drift, source overclaiming, evidence leakage, and language mismatch before publish.",
+      "scope": "Validation agent, PostgreSQL review persistence helper, /api/review-runs/validate-chat, sample validation cases, unit tests, cache-busting versions, daily logs",
+      "result": "The project can now run a validation batch from JSON or HTTP, produce review items, and write them to review_runs / review_items when PostgreSQL is connected.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 02:20",
+      "module": "RAG Route Split",
+      "change": "Split Mia chat into vertical report questions and smalltalk bridge replies",
+      "reason": "The user wanted the RAG path to separate serious DFDS report questions from light prompts, so smalltalk can answer briefly and then guide the manager back to the vertical report flow.",
+      "scope": "Backend chat mode routing, frontend chat routing, live API payloads, response guidelines, daily logs, cache-busting versions",
+      "result": "Report questions now run through the vertical retrieval path, while greetings, thanks, weather, and other light prompts use the smalltalk route for a short answer and a bridge back to the DFDS report.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 02:15",
+      "module": "Internal Review Console",
+      "change": "Added a standalone internal review page for validation and reflection supervision",
+      "reason": "The team needs a practical harness to inspect evidence chains, source limitations, RAG behavior, Mia guardrails, and release hygiene before new agent outputs are surfaced in the dashboard.",
+      "scope": "Review Console navigation, seeded log-derived review records, review queue, detail panel, evidence chain, backend review schema and API, cache-busting versions",
+      "result": "Internal reviewers can inspect seeded supervision items from the July 16-21 project logs and use the console as the first operational review workspace.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 02:05",
+      "module": "Sidebar Data Snapshot Removal",
+      "change": "Removed the sidebar data collection snapshot card",
+      "reason": "The user asked to remove the lower-left block showing Data collection, Public snapshot, and Collected July 16, 2026.",
+      "scope": "Sidebar, stylesheet cleanup, cache-busting versions, Update Log",
+      "result": "The sidebar now keeps only the DFDS brand area and main navigation, with no data snapshot card or unused collection-status styling.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 01:40",
+      "module": "Quick Read Wording Refresh",
+      "change": "Rewrote the page-opening Quick read blocks in more natural, plain business English",
+      "reason": "The user felt the previous page summaries were still too abstract and wanted wording that sounds easier, more conversational, and clearer for non-technical stakeholders.",
+      "scope": "Overview, Customer Voice, App Reviews, Competitors, Recommendations, Survey CSV, Update Log, Data Basis, cache-busting versions",
+      "result": "Each page now starts with shorter, more direct guidance about what to look at first, what question the page answers, and how a manager can use it.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 01:20",
+      "module": "Page Summary Copy Simplification",
+      "change": "Rewrote the page summary blocks in simpler, more conversational English",
+      "reason": "The user wanted each page summary to sound less abstract and easier for a business stakeholder to understand at a glance.",
+      "scope": "Overview, Customer Voice, App Reviews, Competitors, Recommendations, Survey CSV, Update Log, Data Basis, cache-busting versions",
+      "result": "Each page now starts with a plain-language Quick read that explains what the page is for, what to check first, and how to use it.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 01:15",
+      "module": "Chat Assistant Multilingual Evidence Alignment",
+      "change": "Extended evidence summaries and backend fallback evidence responses to all supported detected languages",
+      "reason": "The user clarified that the same-language rule must apply to every language, not only Chinese; for example, Danish questions should receive Danish evidence summaries.",
+      "scope": "Frontend evidence formatting, backend evidence-only fallback, multilingual language detection, cache-busting versions, daily logs",
+      "result": "Mia now keeps local evidence summaries in the detected input language for Danish, German, French, Spanish, Japanese, Korean, Chinese, and English instead of mixing English evidence into non-English answers.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 01:00",
+      "module": "Chat Assistant Evidence Language Alignment",
+      "change": "Localized Chinese evidence bullets and detected route names from the user's question",
+      "reason": "The user asked in Chinese about Dover-Calais, but Mia returned Chinese wrapper text with English evidence bullets and kept the route focus as All signals.",
+      "scope": "Local chat evidence formatting, route detection from message text, cache-busting versions, daily logs",
+      "result": "Chinese questions now receive Chinese evidence summaries, and route mentions such as Dover-Calais influence the evidence focus even if the page dropdown remains All signals.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 00:45",
+      "module": "Chat Assistant Small-talk Expansion",
+      "change": "Expanded Mia's small-talk handling into dedicated greeting, identity, capability, wellbeing, thanks, apology, goodbye, joke, and confusion intents",
+      "reason": "The user asked to add all common small talk so Mia behaves more like a mature commercial chatbot rather than a narrow report search box.",
+      "scope": "Chat assistant intent routing, backend bridge replies, conversation guidelines, cache versioning, daily logs",
+      "result": "Mia now answers common conversational prompts with short same-language replies and only bridges back to the DFDS report when that feels appropriate.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 00:30",
+      "module": "Chat Assistant Small-talk Guard",
+      "change": "Added a second non-report intent guard before live chat calls and expanded greeting detection for messages like Mia hello",
+      "reason": "The user still saw weather and greeting questions return unrelated evidence, which means cached or alternate chat paths could still reach retrieval.",
+      "scope": "Chat assistant intent classification, live chat request guard, cache-busting versions, update log",
+      "result": "Weather, greetings, and off-topic messages now return Mia's concise same-language bridge response without evidence cards or backend calls, and the browser is forced to load the newest modules.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-21 00:15",
+      "module": "Chat Assistant Cache Busting",
+      "change": "Added a cache-busting version to the chat assistant module import",
+      "reason": "The browser was still using the old chat-assistant.mjs module, so small-talk and weather routing changes did not appear after refresh.",
+      "scope": "Frontend module imports, chat assistant loading, index cache version, update log",
+      "result": "app.js now imports chat-assistant.mjs with a version query, and index.html now loads a new app.js version so Mia's latest off-topic routing is forced into the browser.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 20:05",
+      "module": "Chat Assistant Off-topic Routing",
+      "change": "Added explicit small-talk, weather, and off-topic intent routing before evidence retrieval",
+      "reason": "The user found that asking about the weather still triggered unrelated report evidence, so Mia needed a mature chatbot-style routing layer before search.",
+      "scope": "Conversation guidelines, chat intent classification, local fallback, backend bridge reply, cache versioning",
+      "result": "Weather, greetings, and unrelated messages now receive a friendly same-language bridge back to the DFDS report instead of empty or mismatched evidence cards.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 19:50",
+      "module": "Chat Assistant Bridge Reply",
+      "change": "Made Mia answer greetings and out-of-report messages with a friendly bridge back to the DFDS report",
+      "reason": "The user wanted the assistant to behave more like a mature chatbot that can handle unrelated chatter gracefully instead of dumping an empty evidence fallback.",
+      "scope": "Chat submission flow, local fallback, DeepSeek prompt, backend bridge reply, response labels",
+      "result": "When the user says hello or asks something unrelated, Mia now replies in the same language with a short warm introduction and a direct prompt back to the DFDS report.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 19:40",
+      "module": "Chat Assistant Language Polish",
+      "change": "Removed English/Translation labels and made the assistant answer in the same language as the question",
+      "reason": "The user wanted the assistant to feel more natural and human, without a translation wrapper, and to answer in the language the manager actually used.",
+      "scope": "Assistant greeting, message labels, local fallback, DeepSeek prompt, live API fallback copy, frontend cache versioning",
+      "result": "The assistant now introduces itself as Mia, shows no English/Translation wrappers, and returns Chinese, English, or other supported language responses directly in that same language.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 19:20",
+      "module": "Chat Assistant Launcher Polish",
+      "change": "Simplified the collapsed assistant launcher and replaced the text close button with an × icon",
+      "reason": "The user wanted the chat assistant to feel closer to mature business chatbot patterns, with less visible copy and a more familiar close control.",
+      "scope": "Floating chat launcher, chat drawer header, assistant note, initial assistant message, frontend cache versioning",
+      "result": "The collapsed assistant now reads Insights with an AI mark, the drawer header says Insight assistant, the note uses business-friendly wording, and the close control is shown as × with an accessible label.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 16:46",
+      "module": "Frontend Modular Architecture Split",
+      "change": "Split the frontend into layered data, feature, service, core, and utility modules",
+      "reason": "The user wanted the project files to follow the platform logic instead of keeping all public data in data.js and all frontend behavior in one large app.js file.",
+      "scope": "Frontend file architecture, data modules, page renderers, chat assistant, export brief, navigation, work scripts, handoff documentation",
+      "result": "Moved DFDS data into app/data domain files, moved UI behavior into app/scripts modules, kept the existing HTML/CSS/native JavaScript stack, and preserved the current dashboard behavior.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 16:29",
+      "module": "RAG Validation Set Refresh",
+      "change": "Updated the human validation workbook with dashboard-driven manager questions",
+      "reason": "The user wants the validation questions and answers to feel like a real manager asking follow-up questions after reading the frontend dashboard, not like abstract product knowledge checks.",
+      "scope": "RAG validation workbook, evidence anchors, human scoring workflow, handoff documentation",
+      "result": "Regenerated outputs/dfds-rag-validation-set.xlsx with 50 realistic dashboard-based questions, expected English answers, translation summaries, route context, evidence anchors, and editable human scoring columns.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 15:41",
+      "module": "Memory RAG Upgrade",
+      "change": "Added project memory, page-aware retrieval, and visible chat evidence cards",
+      "reason": "The user wants the report assistant to answer from both the visible dashboard data and the PostgreSQL + pgvector knowledge base, while following a short-term, medium-term, and long-term memory pattern.",
+      "scope": "Database schema, backend RAG context, project memory seed, chat response evidence display, frontend cache versioning, evaluation workflow preparation",
+      "result": "Added project_memories and rag_evaluation_items tables, seeded one long-term DFDS answering-policy memory, upgraded backend retrieval to combine page context, evidence, insights, memory, and recent chat history, and made the chat UI show supporting evidence cards below answers.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 15:18",
+      "module": "Local Python Environment Hygiene",
+      "change": "Ignored the local Python virtual environment folder",
+      "reason": "The local PostgreSQL and pgvector setup uses a Python virtual environment, which should not be treated as product source code.",
+      "scope": "Local development environment, project file hygiene",
+      "result": "Added .venv/ to .gitignore so backend dependencies stay local and do not pollute the project files.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 15:08",
+      "module": "Local pgvector Version Alignment",
+      "change": "Updated local setup guidance from PostgreSQL 16 to PostgreSQL 17",
+      "reason": "The user's PostgreSQL 16 database could not find the pgvector extension control file, while the current Homebrew pgvector formula is packaged for newer PostgreSQL versions.",
+      "scope": "Local pgvector setup guide, handoff documentation, setup troubleshooting",
+      "result": "LOCAL_PGVECTOR_SETUP.md now recommends PostgreSQL 17 and includes recovery commands for the PostgreSQL 16 vector.control error.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 14:52",
+      "module": "Local pgvector Setup",
+      "change": "Added macOS local PostgreSQL and pgvector setup guidance",
+      "reason": "The user decided to stop using Docker and wants to run PostgreSQL plus pgvector directly on the Mac.",
+      "scope": "Local database setup documentation, environment template, local backend start script, project handoff",
+      "result": "Added LOCAL_PGVECTOR_SETUP.md, changed the example DATABASE_URL to a local macOS PostgreSQL format, and added a local:start script for running the backend without Docker.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 14:39",
+      "module": "RAG Evidence Fallback Fix",
+      "change": "Added frontend evidence fallback when database retrieval returns no rows",
+      "reason": "The chat assistant reached DeepSeek, but an empty PostgreSQL retrieval result caused the answer to say no app review data existed even though the dashboard had embedded app review evidence.",
+      "scope": "Chat request payload, backend retrieval fallback, DeepSeek answer instructions, frontend cache versioning",
+      "result": "The frontend now sends its top retrieved evidence to /api/chat as backup context, and the backend uses that evidence if PostgreSQL retrieval is empty. The prompt also avoids unexpected non-input-language summaries for English questions.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 14:28",
+      "module": "Database Startup Hardening",
+      "change": "Hardened the PostgreSQL and pgvector startup flow",
+      "reason": "The first database startup must create the pgvector extension before the backend registers vector types and imports evidence.",
+      "scope": "Backend database initialization, Docker Compose health check, Docker build context, developer scripts, project handoff",
+      "result": "Added PostgreSQL health checks, made the backend wait and retry database initialization, moved pgvector registration after schema creation, added a Docker ignore file, and added helper scripts for seed export and Docker startup.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 14:05",
+      "module": "Evidence Knowledge Base Step 2",
+      "change": "Added PostgreSQL and pgvector as the database layer for public evidence",
+      "reason": "The user approved moving from local frontend retrieval to a real Evidence Knowledge Base for Trustpilot, Google Play, Apple App Store, Google Reviews, Reddit, Company News, and future Survey CSV data.",
+      "scope": "Database schema, Docker setup, seed data export, backend retrieval, chat sessions, chat messages, frontend chat API payload",
+      "result": "Added PostgreSQL + pgvector schema for companies, routes, sources, evidence_items, insight_items, chat_sessions, and chat_messages; generated seed data from the current public dashboard dataset; updated the backend to initialize, seed, retrieve evidence, and store chat turns; updated the chat UI to use database-backed Phase 2 mode.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-20 13:16",
+      "module": "DeepSeek Chat Step 1",
+      "change": "Connected the report chat assistant to a local backend DeepSeek proxy",
+      "reason": "The user wants the assistant to move beyond local mock retrieval and start using a real LLM while keeping the current dashboard unchanged.",
+      "scope": "Floating chat assistant, local backend API, environment-based API key handling, frontend cache versioning",
+      "result": "Added a Python backend endpoint at /api/chat, kept the DeepSeek key out of frontend files, made the chat send retrieved dashboard evidence to the backend, and kept a local fallback when the backend or API key is unavailable.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-18 16:32",
+      "module": "Daily Logs Migration",
+      "change": "Replaced the standalone HANDOFF.md with dated daily logs",
+      "reason": "The user wanted a persistent, easier-to-scan record of project progress instead of a single handoff file.",
+      "scope": "Project documentation, frontend status, chat assistant status, local RAG status, Update Log process",
+      "result": "The project now keeps dated logs under dfds-customer-insights-logs/, with a README index and one daily markdown file per date.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-18 16:24",
+      "module": "Update Log Cache Fix",
+      "change": "Added script versioning for dashboard data and app logic",
+      "reason": "The browser could keep showing an older Update Log even after data.js had been updated.",
+      "scope": "HTML script loading, Update Log visibility",
+      "result": "Added cache-busting query versions to data.js and app.js so the latest dashboard data and update logs load after refresh.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-18 16:18",
+      "module": "Local RAG Assistant Upgrade",
+      "change": "Connected the chat assistant to the frontend evidence dataset",
+      "reason": "Managers need to ask follow-up questions based on the visible report instead of receiving fixed mock answers.",
+      "scope": "Floating chat assistant, public evidence retrieval, bilingual response format",
+      "result": "The assistant now searches embedded dashboard evidence from app reviews, Google locations, customer signals, voice themes, root causes, competitors, recommendations, and sources, then replies with English, top evidence, source list, and a translation-style summary in the user's input language.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-18 16:08",
+      "module": "Bilingual Chat Response",
+      "change": "Added English-first and input-language response format",
+      "reason": "Managers may ask questions in different languages, but the product interface and business report should remain English-first.",
+      "scope": "Floating chat assistant response logic",
+      "result": "Chat replies now show an English answer first, followed by a translation-style summary in the detected input language.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-18 15:58",
+      "module": "Report Chat Assistant MVP",
+      "change": "Added a floating report question assistant",
+      "reason": "Managers need a way to ask follow-up questions while reading the dashboard without changing the main report layout.",
+      "scope": "Global frontend layout, chat launcher, chat drawer, message history, input box, send button",
+      "result": "Added a responsive right-bottom chat window with message history, user input, send behavior, mock answers, and close/open controls while preserving the existing dashboard pages.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-18 15:30",
+      "module": "Report-inspired Visual Update",
+      "change": "Adjusted frontend visual style toward a report-inspired product interface",
+      "reason": "The dashboard needed to feel closer to DFDS-style reporting while still working as an interactive web product.",
+      "scope": "Global styles, typography, cards, page summary blocks, colors, shadows",
+      "result": "Updated the interface to use softer neutral colors, lighter shadows, more report-like heading hierarchy, and a cleaner business-dashboard presentation.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-16 21:35",
+      "module": "Route Filter Review",
+      "change": "Customer Voice route filtering",
+      "reason": "The page showed all-route results even when a specific route was selected.",
+      "scope": "Customer Voice, Recommendations, Overview route lens",
+      "result": "Customer Voice now shows only the selected route when Route focus is set to a specific route.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-16 21:36",
+      "module": "Page Context Review",
+      "change": "Route focus visibility",
+      "reason": "App Reviews, Competitors, Survey CSV, Update Log, and Data Basis are not route-specific views.",
+      "scope": "Top navigation and page header controls",
+      "result": "Route focus is hidden on pages where route filtering would be misleading.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-16 21:38",
+      "module": "Competitor Scope Review",
+      "change": "Competitor selection explanation",
+      "reason": "The competitor page needed to explain why each ferry company is relevant to DFDS.",
+      "scope": "Competitors page",
+      "result": "Added comparison role, main routes, DFDS overlap, customer view, and what DFDS can learn.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-16 21:39",
+      "module": "Insight Display Review",
+      "change": "Sentiment mix display",
+      "reason": "Using 1-5 stars looked like emotion categories and was confusing for marketing users.",
+      "scope": "Overview sentiment panel",
+      "result": "Replaced star distribution with Positive / Neutral / Negative customer temperature.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-16 23:50",
+      "module": "Brand & Layout Review",
+      "change": "DFDS visual styling",
+      "reason": "The interface needed to feel closer to DFDS investor/reporting materials.",
+      "scope": "Global layout, sidebar, cards, logo, colors",
+      "result": "Added DFDS logo and adjusted colors toward DFDS-style navy, blue, white, and cool grey.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-16 23:55",
+      "module": "Data Basis Review",
+      "change": "Sources page wording",
+      "reason": "The page was less about raw links and more about the report's data basis and preparation notes.",
+      "scope": "Left navigation and Data Basis page",
+      "result": "Renamed Sources to Data Basis and moved data preparation notes out of Overview.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-16 23:58",
+      "module": "Competitor Briefing Review",
+      "change": "Competitor scope note",
+      "reason": "Stakeholders needed a clearer explanation of how many competitors were selected and why.",
+      "scope": "Competitors page",
+      "result": "Changed the competitor scope note into a bullet list covering count, priority rules, and remaining review checks.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 00:02",
+      "module": "Overview KPI Review",
+      "change": "Top metric cards",
+      "reason": "The Marketing watchout card was too abstract and did not add enough value at overview level.",
+      "scope": "Overview top summary",
+      "result": "Removed the watchout card and resized the three main metric cards to fit the page.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 00:04",
+      "module": "Source Clarity Review",
+      "change": "Reddit and Google Reviews wording",
+      "reason": "Reddit and Google Reviews cards could be misunderstood as formal review-count sources.",
+      "scope": "Overview Main data sources and Data Basis notes",
+      "result": "Clarified Reddit as discussion signals and separated Google Reviews from brand-level review sources.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 00:14",
+      "module": "Google Reviews Collection",
+      "change": "Location-level Google review signals",
+      "reason": "Google Reviews are meaningful for ferry analysis only when collected by terminal or route location.",
+      "scope": "Main data sources, Customer Voice, Data Basis",
+      "result": "Added four public Google location profiles for Calais, Dover, Newhaven, and Newcastle and mapped them to related DFDS routes.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 00:20",
+      "module": "Customer Voice Redesign",
+      "change": "Customer Signals page redesigned as Customer Voice",
+      "reason": "The previous page showed too much evidence text and did not clearly explain what marketing managers should take away.",
+      "scope": "Customer Voice page and page-specific export brief",
+      "result": "Replaced long evidence cards with concise theme summaries, source tags, marketing actions, and expandable evidence details.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 00:30",
+      "module": "Scope & Readability Update",
+      "change": "Passenger ferry scope and full expanded text",
+      "reason": "The report needed to clarify that it covers passenger ferry customers, and expanded recommendation details should not be truncated.",
+      "scope": "Data Basis, Competitors, Recommendations",
+      "result": "Added passenger ferry scope notes and removed text truncation from expanded recommendation details.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 00:40",
+      "module": "Dashboard UX Upgrade",
+      "change": "Added visual summaries and clearer business wording",
+      "reason": "The dashboard needed fewer text-heavy sections and stronger visual cues for non-technical stakeholders.",
+      "scope": "Overview, Recommendations, Data Basis, page export briefs",
+      "result": "Added Google location rating bars, recommendation priority lanes, clearer source status language, and shorter page-specific brief wording.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 00:53",
+      "module": "Product Presentation Upgrade",
+      "change": "Applied clearer data visualization and business wording",
+      "reason": "The dashboard needed to communicate public review evidence quickly for marketing and CX stakeholders.",
+      "scope": "Overview, Recommendations, Data Basis, Update Log",
+      "result": "Kept Google location evidence visible through rating and review-volume bars, grouped recommendations by priority, and replaced technical wording with clearer report language.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 01:12",
+      "module": "Recommendations Wording",
+      "change": "Simplified recommendation priority language",
+      "reason": "The priority explanation felt too abstract for business users.",
+      "scope": "Recommendations page and page export brief",
+      "result": "Changed the section wording to Do first, Do next, Expected result, and Reason, with shorter recommendation explanations.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 01:24",
+      "module": "Firecrawl Competitor Data Update",
+      "change": "Filled competitor review gaps using Firecrawl search",
+      "reason": "Several competitor rows still showed Score not collected, which limited sorting and comparison value.",
+      "scope": "Competitors, Data Basis, Update Log",
+      "result": "Added public Trustpilot score and review-count snapshots for Condor Ferries, Scandlines, Color Line, Fjord Line, TT-Line, Tallink Silja, and Viking Line.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 09:55",
+      "module": "Page Summary Upgrade",
+      "change": "Added a clear summary block at the top of every page",
+      "reason": "Users needed to understand what each page is for before reading the data cards or tables.",
+      "scope": "Overview, Customer Voice, App Reviews, Competitors, Recommendations, Survey CSV, Update Log, Data Basis",
+      "result": "Each page now starts with a short purpose statement, what to read first, what to watch for, and how to use the page.",
+      "status": "Completed"
+    },
+    {
+      "time": "2026-07-17 00:06",
+      "module": "Export Brief Review",
+      "change": "Page-specific export brief",
+      "reason": "The export button previously produced the same text on every page.",
+      "scope": "Export page brief button",
+      "result": "Export now generates a different brief for each active page and route focus.",
+      "status": "Completed"
+    }
+  ],
+  "recommendations": [
+    {
+      "routes": [
+        "all",
+        "dover-calais",
+        "newhaven-dieppe"
+      ],
+      "priority": "High",
+      "title": "Build a disruption recovery message system for delay-heavy routes",
+      "expectedImprovement": "Customers know what is happening during delays and feel less ignored.",
+      "reasoning": "Delay complaints usually get worse when customers do not know what to expect. DFDS should send clear messages before the trip, during the delay, and after the crossing.",
+      "evidence": "Trustpilot negative themes, Dover delay reporting, Newhaven-Dieppe incident reporting."
+    },
+    {
+      "routes": [
+        "all",
+        "jersey"
+      ],
+      "priority": "High",
+      "title": "Separate Jersey and Channel Islands reporting from the all-company average",
+      "expectedImprovement": "DFDS can spot local trust problems earlier.",
+      "reasoning": "Jersey feedback has its own issues. If it is mixed into the total DFDS score, local problems may be missed until they become bigger.",
+      "evidence": "Public reporting on Jersey service, freight pricing, and disruption concerns."
+    },
+    {
+      "routes": [
+        "all"
+      ],
+      "priority": "Medium",
+      "title": "Turn staff friendliness into a proof-backed marketing asset",
+      "expectedImprovement": "DFDS can use a real customer strength in campaigns.",
+      "reasoning": "Many positive reviews mention helpful staff. This can support marketing messages, especially when DFDS also stays honest about delays and boarding issues."
+    },
+    {
+      "routes": [
+        "all"
+      ],
+      "priority": "Medium",
+      "title": "Audit the onboard promise around cabins, food, and boarding comfort",
+      "expectedImprovement": "Customers get a trip experience closer to what marketing promises.",
+      "reasoning": "Some complaints mention cabins, food, and boarding comfort. DFDS should check whether campaign messages match what passengers actually experience."
+    },
+    {
+      "routes": [
+        "all",
+        "newcastle-ijmuiden"
+      ],
+      "priority": "High",
+      "title": "Fix DFDS Passenger app authentication and booking retrieval before promoting mobile self-service",
+      "expectedImprovement": "Fewer customers lose confidence before they travel.",
+      "reasoning": "Recent app reviews mention login loops, missing bookings, and access errors. These are basic travel tasks, so they should work reliably before DFDS promotes the app heavily.",
+      "evidence": "Apple App Store GB review feed for DFDS - Passenger; Google Play GB rating details for com.dfds.pax."
+    },
+    {
+      "routes": [
+        "all",
+        "newcastle-ijmuiden"
+      ],
+      "priority": "Medium",
+      "title": "Add route-level mobile feature messaging",
+      "expectedImprovement": "Customers know which app features work on their route.",
+      "reasoning": "One Apple review says mobile check-in was not available for Newcastle to IJmuiden. The app should explain this before customers try to use it.",
+      "evidence": "Apple App Store GB review dated 2026-06-23."
+    },
+    {
+      "routes": [
+        "all",
+        "dover-calais",
+        "newhaven-dieppe",
+        "newcastle-ijmuiden"
+      ],
+      "priority": "Medium",
+      "title": "Use Google location strengths as route-level proof points",
+      "expectedImprovement": "Campaign claims feel more believable because they match public reviews.",
+      "reasoning": "Google location reviews show different strengths by route. Dover-Calais has terminal and staff signals, Newhaven has check-in and crossing signals, and Newcastle has onboard experience signals.",
+      "evidence": "Public Google location profiles for DFDS Calais, Dover, Newhaven, and Newcastle."
+    }
+  ],
+  "passengerProfileSummary": {
+    "sourceLabel": "Synthetic Passenger Profile PG",
+    "status": "Ready for slicing",
+    "passengerCount": 1000,
+    "tripCount": 1800,
+    "routeCount": 14,
+    "productCount": 10,
+    "dateRange": "2024-01-01 to 2026-12-31",
+    "methodology": "Star-schema synthetic dataset generated from public-source-inspired assumptions. It is useful for segmentation and agent prototyping, not as real DFDS CRM evidence.",
+    "actarDefinition": [
+      "Action area",
+      "Customer target",
+      "Trigger signal",
+      "Analysis",
+      "Recommendation"
+    ],
+    "topSegments": [
+      {
+        "label": "Young Leisure Travelers",
+        "share": "16.9%",
+        "passengers": 169
+      },
+      {
+        "label": "Car-based Cross-border Travelers",
+        "share": "15.4%",
+        "passengers": 154
+      },
+      {
+        "label": "Price-sensitive Short-break Travelers",
+        "share": "14.6%",
+        "passengers": 146
+      },
+      {
+        "label": "Family Holiday Travelers",
+        "share": "13.3%",
+        "passengers": 133
+      },
+      {
+        "label": "High-value Comfort Seekers",
+        "share": "11.1%",
+        "passengers": 111
+      }
+    ],
+    "routeAffinity": [
+      {
+        "label": "Channel crossing short",
+        "share": "48.9%",
+        "trips": 880,
+        "signal": "Dominant simulated demand pool."
+      },
+      {
+        "label": "North Sea overnight",
+        "share": "14.7%",
+        "trips": 265,
+        "signal": "Comfort and mini-cruise oriented."
+      },
+      {
+        "label": "Baltic overnight",
+        "share": "13.4%",
+        "trips": 242,
+        "signal": "Vehicle and cabin heavy."
+      },
+      {
+        "label": "Irish Celtic",
+        "share": "10.6%",
+        "trips": 191,
+        "signal": "Family and vehicle transport signal."
+      },
+      {
+        "label": "Celtic short break",
+        "share": "10.1%",
+        "trips": 182,
+        "signal": "Short-break and leisure pattern."
+      }
+    ],
+    "productPreference": [
+      {
+        "label": "Cabin",
+        "share": "26.8%",
+        "trips": 482
+      },
+      {
+        "label": "Vehicle crossing",
+        "share": "19.6%",
+        "trips": 353
+      },
+      {
+        "label": "Flexible ticket",
+        "share": "16.6%",
+        "trips": 298
+      },
+      {
+        "label": "Mini-cruise",
+        "share": "11.3%",
+        "trips": 203
+      },
+      {
+        "label": "Seat",
+        "share": "11.2%",
+        "trips": 201
+      }
+    ],
+    "travelContext": [
+      {
+        "label": "Weekend getaway",
+        "share": "20.6%",
+        "trips": 370
+      },
+      {
+        "label": "Transport alternative",
+        "share": "16.4%",
+        "trips": 295
+      },
+      {
+        "label": "Family holiday",
+        "share": "15.2%",
+        "trips": 273
+      },
+      {
+        "label": "Mini-cruise leisure",
+        "share": "13.3%",
+        "trips": 239
+      },
+      {
+        "label": "Visiting friends and relatives",
+        "share": "11.8%",
+        "trips": 213
+      }
+    ],
+    "actarSlices": [
+      {
+        "actionArea": "Channel crossing short",
+        "customerTarget": "Car-based Cross-border Travelers",
+        "triggerSignal": "177 synthetic trips; 70.6% vehicle share.",
+        "analysis": "This group behaves like a practical transport audience that needs reliable vehicle-first planning.",
+        "recommendation": "Prioritize boarding clarity, vehicle booking reassurance, ticket-rule clarity, and disruption timing."
+      },
+      {
+        "actionArea": "Channel crossing short",
+        "customerTarget": "Family Holiday Travelers",
+        "triggerSignal": "137 synthetic trips; 86.9% cabin share; average order value 369.88.",
+        "analysis": "Family travelers combine vehicle needs with comfort and planning needs.",
+        "recommendation": "Prioritize family-package messaging, car guidance, school-holiday timing, and flexible-ticket content."
+      },
+      {
+        "actionArea": "North Sea overnight",
+        "customerTarget": "High-value Comfort Seekers",
+        "triggerSignal": "75 synthetic trips; 100.0% cabin share; average order value 501.39.",
+        "analysis": "This group indexes toward premium cabins, comfort, lounge and overnight experience.",
+        "recommendation": "Prioritize premium cabin proof points, onboard experience, meal bundles, and mini-cruise upgrades."
+      },
+      {
+        "actionArea": "North Sea overnight",
+        "customerTarget": "Senior Mini-cruise Travelers",
+        "triggerSignal": "76 synthetic trips; 100.0% cabin share; average order value 425.85.",
+        "analysis": "This is a leisure audience that responds to low-friction, confidence-building mini-cruise packaging.",
+        "recommendation": "Prioritize easy itinerary planning, cabin comfort, assisted booking options, and calm onboarding messages."
+      }
+    ],
+    "sourceAssumptions": [
+      "DFDS route, destination, onboard product, pet travel and mini-cruise pages.",
+      "DFDS annual, investor and sustainability reporting.",
+      "Tourism boards, ports, national statistics and market research.",
+      "Google Trends, public reviews, social signals and competitor positioning."
+    ]
+  },
+  "itDataFlowSummary": {
+    "title": "IT Data Flow",
+    "sourceLabel": "IT flow",
+    "status": "Ready for upload review",
+    "acceptedFormats": [
+      "txt",
+      "pdf",
+      "doc",
+      "docx"
+    ],
+    "monitoredSourceFamilies": 7,
+    "sourceSystems": [
+      "Upload inbox",
+      "Version monitor",
+      "Cleaning / normalization",
+      "Star-schema model",
+      "Dashboard views",
+      "Mia chat context"
+    ],
+    "pipelineStages": [
+      {
+        "label": "Upload",
+        "status": "Input",
+        "detail": "Accept the latest txt, pdf, or Word files and keep the original filename."
+      },
+      {
+        "label": "Validate",
+        "status": "Checks",
+        "detail": "Verify file type, recency, route hints, and source version before processing."
+      },
+      {
+        "label": "Clean",
+        "status": "Normalization",
+        "detail": "Extract text, standardize dates and language, and remove obvious duplicates."
+      },
+      {
+        "label": "Model",
+        "status": "Schema",
+        "detail": "Map the batch into source, route, passenger, and memory dimensions."
+      },
+      {
+        "label": "Serve",
+        "status": "Delivery",
+        "detail": "Expose the cleaned batch to dashboard views, Mia, and exportable summaries."
+      }
+    ],
+    "monitoring": [
+      {
+        "label": "File queue",
+        "value": "Live",
+        "detail": "Tracks batch size, file mix, and the most recent upload time."
+      },
+      {
+        "label": "Version watch",
+        "value": "On",
+        "detail": "Shows source versions, processing state, and batch lineage."
+      },
+      {
+        "label": "Inferred dimensions",
+        "value": "Route / source / language / schema",
+        "detail": "The guessed dimensions the agent uses before data reaches Mia."
+      },
+      {
+        "label": "Agent reliability",
+        "value": "0.86",
+        "detail": "Current confidence for extraction, mapping, and synthesis."
+      }
+    ],
+    "governanceChecks": [
+      "Every file upload keeps original filename and source version.",
+      "Visible fields stay visible in Excel; inferred fields stay inside the model.",
+      "Human feedback can override weak batch inference before Mia reuses it."
+    ],
+    "sourceVersions": [
+      {
+        "source": "Public evidence snapshot",
+        "version": "7 source families",
+        "state": "Stable",
+        "note": "Trustpilot, Google Reviews, app stores, Reddit, and public source notes."
+      },
+      {
+        "source": "Passenger profile PG",
+        "version": "1,000 passengers / 1,800 trips",
+        "state": "Ready",
+        "note": "Synthetic star schema used by the Passenger Profile sub-agent."
+      },
+      {
+        "source": "Supervisor log trail",
+        "version": "60 entries",
+        "state": "Current",
+        "note": "Daily product changes and release notes stay aligned with the UI."
+      },
+      {
+        "source": "Survey CSV",
+        "version": "Upload later",
+        "state": "Waiting",
+        "note": "Future survey files will be versioned by upload date and schema."
+      },
+      {
+        "source": "IT flow config",
+        "version": "Route-aware",
+        "state": "Current",
+        "note": "Upload, processing, and memory surfaces stay aligned with the active page."
+      }
+    ],
+    "agentReliability": [
+      {
+        "agent": "Parser",
+        "score": 0.93,
+        "detail": "Reads txt, pdf, and Word uploads into one clean text stream."
+      },
+      {
+        "agent": "Classifier",
+        "score": 0.89,
+        "detail": "Infers route, source, and schema dimensions from the batch."
+      },
+      {
+        "agent": "Summarizer",
+        "score": 0.86,
+        "detail": "Turns the batch into a compact preview for the right rail."
+      },
+      {
+        "agent": "Mia",
+        "score": 0.88,
+        "detail": "Uses the shared context to answer in the current report language."
+      }
+    ],
+    "humanFeedback": [
+      {
+        "label": "Show upload preview first",
+        "status": "Approved",
+        "detail": "Keep filename, file type, and batch size visible before the AI summary."
+      },
+      {
+        "label": "Surface source version",
+        "status": "Approved",
+        "detail": "Version tracking should be visible beside processing state."
+      },
+      {
+        "label": "Expose inferred dimensions",
+        "status": "Needs review",
+        "detail": "When confidence drops, show the guessed dimensions explicitly."
+      }
+    ],
+    "visibleFields": [
+      {
+        "field": "source_family",
+        "type": "text",
+        "visible": true,
+        "purpose": "Public source grouping"
+      },
+      {
+        "field": "source_version",
+        "type": "text",
+        "visible": true,
+        "purpose": "Release or upload version"
+      },
+      {
+        "field": "route_key",
+        "type": "text",
+        "visible": true,
+        "purpose": "Route lens"
+      },
+      {
+        "field": "language",
+        "type": "text",
+        "visible": true,
+        "purpose": "Detected language"
+      },
+      {
+        "field": "processing_state",
+        "type": "text",
+        "visible": true,
+        "purpose": "Queued / parsed / modeled / served"
+      },
+      {
+        "field": "inferred_dimensions",
+        "type": "array",
+        "visible": false,
+        "purpose": "Internal agent inference"
+      },
+      {
+        "field": "reliability_score",
+        "type": "number",
+        "visible": false,
+        "purpose": "Confidence and QA weighting"
+      },
+      {
+        "field": "feedback_state",
+        "type": "text",
+        "visible": false,
+        "purpose": "Human review outcome"
+      }
+    ],
+    "batchPreview": [
+      "New uploads keep original text, detected language, and version metadata.",
+      "Rows can be sliced into source, route, and memory dimensions before they reach Mia.",
+      "The preview should sit close to the upload form so the operator can sanity-check the batch."
+    ]
+  },
+  "memoryArchitectureSummary": {
+    "title": "Platform memory architecture",
+    "status": "Shared across the whole product",
+    "sharedSurfaces": [
+      "Overview",
+      "Passenger Profile",
+      "Survey CSV",
+      "Data Basis",
+      "IT Data Flow",
+      "Review Console",
+      "Mia"
+    ],
+    "layers": [
+      {
+        "layer": "Short-term memory",
+        "storage": "chat_messages + current page state",
+        "scope": "Recent turns, active route, selected files, open filters, and temporary UI state.",
+        "purpose": "Keep the current conversation and page context in view."
+      },
+      {
+        "layer": "Medium-term memory",
+        "storage": "session state + batch metadata + feedback queue",
+        "scope": "Open upload batches, current dataset versions, active passenger-profile slices, and validation notes.",
+        "purpose": "Keep the active workstream coherent while the operator is still working."
+      },
+      {
+        "layer": "Long-term memory",
+        "storage": "project_memories + insight KB + approved policies",
+        "scope": "Durable product rules, reusable analysis patterns, validated insights, and shared platform conventions.",
+        "purpose": "Reuse stable knowledge across sessions and product surfaces."
+      }
+    ],
+    "rules": [
+      "Only long-term memory should store durable decisions.",
+      "Short-term memory should stay local to the current session or page.",
+      "Medium-term memory should decay once a batch or project slice closes.",
+      "Mia should cite evidence and memory separately when she answers a question.",
+      "Platform memory should support overview, passenger profile, survey, data basis, IT flow, and chatbot answers together."
+    ]
+  },
+  "sources": [
+    {
+      "title": "Synthetic Passenger Profile PG dataset",
+      "url": "data/passenger_profile/manifest.json",
+      "note": "Local synthetic dataset generated from public-source-inspired assumptions. Used for Passenger Profile sub-agent slicing and Mia evidence, not as real DFDS CRM or survey data."
+    },
+    {
+      "title": "DFDS Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/dfds.com",
+      "note": "Used for DFDS score, review count, distribution, recent review volume, positive themes, and negative themes."
+    },
+    {
+      "title": "DFDS - Passenger on Google Play",
+      "url": "https://play.google.com/store/apps/details?id=com.dfds.pax&hl=en&gl=GB",
+      "note": "Used for Android app rating and review-count details: 2.5/5 rating and 64 reviews in the GB Google Play view. Full review text requires a dedicated Play review connector."
+    },
+    {
+      "title": "DFDS - Passenger on Apple App Store",
+      "url": "https://apps.apple.com/gb/app/dfds-passenger/id6474616110",
+      "note": "Used for Apple app rating details: 3.3/5 rating and 10 GB ratings."
+    },
+    {
+      "title": "Apple App Store customer reviews feed for DFDS - Passenger",
+      "url": "https://itunes.apple.com/gb/rss/customerreviews/id=6474616110/sortBy=mostRecent/json",
+      "note": "Used for recent public Apple review evidence around account login, booking retrieval, and route feature availability."
+    },
+    {
+      "title": "Google Reviews signal: DFDS Calais - Ferry Terminal & Office",
+      "url": "https://wanderlog.com/place/details/1574638/dfds-calais-ferry-terminal--office",
+      "note": "Used for Calais terminal rating and review-count signal mapped to Dover-Calais."
+    },
+    {
+      "title": "Google Reviews signal: DFDS Dover - Office & Ferry Terminal",
+      "url": "https://wanderlog.com/place/details/12640587/dfds-dover-office--ferry-terminal",
+      "note": "Used for Dover terminal rating and review-count signal mapped to Dover-Calais."
+    },
+    {
+      "title": "Google Reviews signal: DFDS Transmanche Ferries, Newhaven",
+      "url": "https://wanderlog.com/place/details/8211168/dfds-transmanche-ferries",
+      "note": "Used for Newhaven terminal/location rating and review-count signal mapped to Newhaven-Dieppe."
+    },
+    {
+      "title": "Google Reviews signal: DFDS Newcastle",
+      "url": "https://wanderlog.com/place/details/10251667",
+      "note": "Used for Newcastle location rating and review-count signal mapped to Newcastle-IJmuiden."
+    },
+    {
+      "title": "Reddit travel discussion: DFDS Short Break ticket rules",
+      "url": "https://www.reddit.com/r/travel/comments/1urvt1f/dfds_ferry_what_happens_if_i_miss_the_return_leg/",
+      "note": "Used as a Reddit discussion signal, not as a formal review score."
+    },
+    {
+      "title": "Reddit travel discussions mentioning DFDS ferry alternatives",
+      "url": "https://www.reddit.com/search/?q=DFDS%20ferry%20review",
+      "note": "Used to identify customer questions about route expectations and travel alternatives."
+    },
+    {
+      "title": "Brittany Ferries Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/www.brittany-ferries.co.uk",
+      "note": "Used for competitor benchmark score and review count."
+    },
+    {
+      "title": "Stena Line Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/www.stenaline.co.uk",
+      "note": "Used for competitor benchmark score and review count."
+    },
+    {
+      "title": "P&O Ferries Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/www.poferries.com",
+      "note": "Used for competitor benchmark score and review count."
+    },
+    {
+      "title": "Irish Ferries Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/www.irishferries.com",
+      "note": "Used for competitor benchmark score and review count."
+    },
+    {
+      "title": "Condor Ferries Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/condorferries.co.uk",
+      "note": "Firecrawl search was used to capture the public score and review-count snapshot for the competitor benchmark."
+    },
+    {
+      "title": "Scandlines Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/www.scandlines.dk",
+      "note": "Firecrawl search was used to capture the public score and review-count snapshot for the competitor benchmark."
+    },
+    {
+      "title": "Color Line Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/www.colorline.no",
+      "note": "Firecrawl search was used to capture the public score and review-count snapshot for the competitor benchmark."
+    },
+    {
+      "title": "Fjord Line Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/www.fjordline.com",
+      "note": "Firecrawl search was used to capture the public score and review-count snapshot for the competitor benchmark."
+    },
+    {
+      "title": "TT-Line Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/ttline.com",
+      "note": "Firecrawl search was used to capture the public score and review-count snapshot for the competitor benchmark."
+    },
+    {
+      "title": "Tallink Silja Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/www.tallinksilja.com",
+      "note": "Firecrawl search was used to capture the public score and review-count snapshot for the competitor benchmark."
+    },
+    {
+      "title": "Viking Line Trustpilot profile",
+      "url": "https://www.trustpilot.com/review/vikingline.com",
+      "note": "Firecrawl search was used to capture the public score and review-count snapshot for the competitor benchmark."
+    },
+    {
+      "title": "BBC reporting on Dover ferry delays",
+      "url": "https://www.bbc.co.uk/news/uk-england-kent-67837449",
+      "note": "Used as a public signal for delay communication and border-control journey friction."
+    },
+    {
+      "title": "Guardian reporting on Newhaven-Dieppe DFDS incident",
+      "url": "https://www.theguardian.com/uk-news/2025/mar/12/dfds-ferry-passengers-newhaven-dieppe-compensation",
+      "note": "Used as a public signal for disruption recovery and compensation risk."
+    },
+    {
+      "title": "BBC reporting on Jersey ferry service concerns",
+      "url": "https://www.bbc.com/news/articles/cp8v2gqxv1go",
+      "note": "Used as a public signal for Jersey and Channel Islands service confidence."
+    }
+  ]
+}

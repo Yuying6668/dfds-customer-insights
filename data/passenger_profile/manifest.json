@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-07-22T22:31:44.016745+00:00",
+  "tables": {
+    "dim_source_assumption": 7,
+    "dim_route": 14,
+    "dim_product": 10,
+    "dim_booking_channel": 8,
+    "dim_travel_context": 8,
+    "dim_passenger": 1000,
+    "dim_date": 1096,
+    "fact_passenger_trips": 1800
+  },
+  "output_dir": "outputs/passenger_profile"
+}

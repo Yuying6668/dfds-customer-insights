@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DFDS Synthetic Public Source Lab</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --ink: #172026;
+      --muted: #5b6770;
+      --line: #d8ded8;
+      --surface: #ffffff;
+      --accent: #0d6b78;
+      --warning: #9a6113;
+      --danger: #9e3434;
+      --positive: #2e765b;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 24px 64px;
+    }
+
+    header {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      max-width: 780px;
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 4.25rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.15;
+    }
+
+    p {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .notice {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: 18px;
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .notice strong {
+      color: var(--ink);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .metric {
+      min-height: 112px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 16px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .metric strong {
+      font-size: 1.8rem;
+    }
+
+    .records {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    article {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    article header {
+      margin: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    article h3 {
+      margin: 0;
+      font-size: 1.04rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .78rem;
+      padding: 4px 9px;
+      white-space: nowrap;
+    }
+
+    .chip.negative {
+      border-color: color-mix(in srgb, var(--danger) 36%, var(--line));
+      color: var(--danger);
+    }
+
+    .chip.mixed {
+      border-color: color-mix(in srgb, var(--warning) 36%, var(--line));
+      color: var(--warning);
+    }
+
+    .chip.positive {
+      border-color: color-mix(in srgb, var(--positive) 36%, var(--line));
+      color: var(--positive);
+    }
+
+    .details {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, .4fr);
+      gap: 16px;
+    }
+
+    .basis {
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    code {
+      background: #edf2ef;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 2px 5px;
+      font-size: .9em;
+    }
+
+    @media (max-width: 820px) {
+      main {
+        padding: 28px 16px 48px;
+      }
+
+      .summary,
+      .details {
+        grid-template-columns: 1fr;
+      }
+
+      article header {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>DFDS Synthetic Public Source Lab</h1>
+      <p>A transparent validation source for testing ingestion, cleaning, tagging, PostgreSQL storage, pgvector retrieval, and manager-facing answer provenance.</p>
+    </header>
+
+    <section class="notice">
+      <strong>This page is not a real external review site.</strong>
+      <p>Every record is synthetic and directional. The records are derived from the project&apos;s existing public seed themes, such as app login friction, route-level mobile check-in expectations, Dover-Calais delay uncertainty, Newhaven-Dieppe recovery messaging, Jersey service trust, terminal reviews, and competitor comparison context. Use it only to validate the reliability chain.</p>
+      <p>Machine-readable archetypes live in <code>#synthetic-public-source-data</code>. The crawler expands those seed-derived archetypes into 1,000 deterministic validation records while preserving provenance.</p>
+    </section>
+
+    <section class="summary" aria-label="source summary">
+      <div class="metric"><span>Record type</span><strong>synthetic</strong></div>
+      <div class="metric"><span>Basis</span><strong>seed-derived</strong></div>
+      <div class="metric"><span>Confidence</span><strong>directional</strong></div>
+      <div class="metric"><span>Records</span><strong>1,000</strong></div>
+    </section>
+
+    <section class="records" aria-label="synthetic records">
+      <article>
+        <header>
+          <h3>App login and booking access remain the highest-risk pre-trip signal</h3>
+          <div class="chips"><span class="chip negative">negative</span><span class="chip">app_store</span><span class="chip">pre_trip</span></div>
+        </header>
+        <div class="details">
+          <p>Simulated customer wording clusters around credentials not being accepted, bookings disappearing, and access errors before travel.</p>
+          <p class="basis">Basis: existing Apple App Store evidence about login loops, credentials, missing bookings, and unauthorized-access messages.</p>
+        </div>
+      </article>
+      <article>
+        <header>
+          <h3>Newcastle-IJmuiden mobile check-in needs route-level expectation setting</h3>
+          <div class="chips"><span class="chip negative">negative</span><span class="chip">app_store</span><span class="chip">newcastle-ijmuiden</span></div>
+        </header>
+        <div class="details">
+          <p>Simulated customers expect mobile check-in to be available after downloading the app and only discover a route limitation later.</p>
+          <p class="basis">Basis: existing Apple App Store review mentioning mobile check-in not being available on Newcastle to IJmuiden.</p>
+        </div>
+      </article>
+      <article>
+        <header>
+          <h3>Dover-Calais delay updates should reduce pre-boarding uncertainty</h3>
+          <div class="chips"><span class="chip mixed">mixed</span><span class="chip">discussion</span><span class="chip">dover-calais</span></div>
+        </header>
+        <div class="details">
+          <p>Simulated discussion signals focus on when to arrive, how border-control timing affects boarding, and whether delay guidance is clear enough.</p>
+          <p class="basis">Basis: existing route insight and Reddit/public delay signals for Dover-Calais.</p>
+        </div>
+      </article>
+      <article>
+        <header>
+          <h3>Newhaven-Dieppe incident recovery needs compensation clarity</h3>
+          <div class="chips"><span class="chip mixed">mixed</span><span class="chip">public_report</span><span class="chip">newhaven-dieppe</span></div>
+        </header>
+        <div class="details">
+          <p>Simulated public-report follow-up asks whether passengers understand the recovery process after disruption or onboard incidents.</p>
+          <p class="basis">Basis: existing Newhaven-Dieppe route insight about passenger compensation after an onboard incident.</p>
+        </div>
+      </article>
+      <article>
+        <header>
+          <h3>Google location strengths can support route-level proof points</h3>
+          <div class="chips"><span class="chip positive">positive</span><span class="chip">location_review</span><span class="chip">all routes</span></div>
+        </header>
+        <div class="details">
+          <p>Simulated location feedback highlights staff, boarding flow, terminal handling, and crossing experience as reusable proof points.</p>
+          <p class="basis">Basis: existing Google location profiles for Calais, Dover, Newhaven, and Newcastle.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script id="synthetic-public-source-data" type="application/json">
+{
+  "generated_at": "2026-07-20",
+  "source_name": "DFDS Synthetic Public Source Lab",
+  "source_note": "Synthetic validation records derived from existing public seed data. Not new external facts.",
+  "target_records": 1000,
+  "expansion_note": "The 18 visible archetypes are expanded deterministically into 1,000 seed-derived validation records by work/import_synthetic_source.py.",
+  "records": [
+    {
+      "id": "syn-app-001",
+      "source_family": "app_store",
+      "route": "all",
+      "journey_stage": "pre_trip",
+      "sentiment": "negative",
+      "published_at": "2026-07-20",
+      "title": "App login and booking access remain the highest-risk pre-trip signal",
+      "observation": "A realistic cluster of app comments would mention credentials not being accepted, bookings disappearing, login loops, or access errors before travel.",
+      "business_meaning": "Mobile self-service should not be promoted heavily until login and booking retrieval feel reliable.",
+      "basis_evidence": ["Apple App Store evidence about failed credentials", "Apple App Store evidence about disappeared bookings", "Existing customer insight: App and booking friction"],
+      "tags": ["app_login", "booking_retrieval", "digital_trust", "pre_trip"],
+      "reliability_note": "Synthetic cluster derived from current app-review seed themes; not a new app-store scrape."
+    },
+    {
+      "id": "syn-app-002",
+      "source_family": "app_store",
+      "route": "newcastle-ijmuiden",
+      "journey_stage": "pre_trip",
+      "sentiment": "negative",
+      "published_at": "2026-07-20",
+      "title": "Newcastle-IJmuiden mobile check-in needs route-level expectation setting",
+      "observation": "A realistic app comment would expect mobile check-in after downloading the app and feel misled when the route does not support it.",
+      "business_meaning": "Route-level app feature availability should be shown before passengers plan around mobile check-in.",
+      "basis_evidence": ["Apple App Store review: mobile check-in unavailable for Newcastle to IJmuiden", "Existing recommendation: Add route-level mobile feature messaging"],
+      "tags": ["mobile_check_in", "route_feature_availability", "newcastle_ijmuiden"],
+      "reliability_note": "Synthetic route-specific validation signal derived from the existing Apple review."
+    },
+    {
+      "id": "syn-app-003",
+      "source_family": "app_store",
+      "route": "all",
+      "journey_stage": "pre_trip",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "The app value proposition is clear when reliability holds",
+      "observation": "A realistic positive app comment would describe the app as handy for travel, while adjacent negative signals still create trust risk.",
+      "business_meaning": "The app has marketing value if reliability issues are reduced and feature availability is clearer.",
+      "basis_evidence": ["Apple App Store positive review: app is handy for travel", "Existing insight: app has clear customer value if reliability improves"],
+      "tags": ["app_value", "travel_convenience", "digital_self_service"],
+      "reliability_note": "Synthetic positive/mixed validation signal derived from existing app evidence."
+    },
+    {
+      "id": "syn-discussion-001",
+      "source_family": "discussion",
+      "route": "dover-calais",
+      "journey_stage": "boarding",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Dover-Calais delay updates should reduce pre-boarding uncertainty",
+      "observation": "A realistic travel discussion would ask when to arrive, how border-control timing affects boarding, and whether DFDS guidance is current enough.",
+      "business_meaning": "Delay guidance should be proactive and practical, not only reactive after disruption begins.",
+      "basis_evidence": ["Existing Dover-Calais route insight: public delay and border-control signal", "Existing recommendation: disruption recovery message system"],
+      "tags": ["delay_guidance", "border_control", "boarding_uncertainty", "dover_calais"],
+      "reliability_note": "Synthetic discussion-style signal based on existing Dover-Calais seed themes."
+    },
+    {
+      "id": "syn-discussion-002",
+      "source_family": "discussion",
+      "route": "dover-calais",
+      "journey_stage": "booking",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Ticket-rule clarity matters on disruption-sensitive routes",
+      "observation": "A realistic pre-booking discussion would compare flexibility, arrival windows, and what happens if traffic or controls delay passengers.",
+      "business_meaning": "Marketing copy should make ticket conditions and recovery expectations easy to understand before purchase.",
+      "basis_evidence": ["Existing Dover-Calais route insight: price-rule confusion", "Existing customer voice theme: disruption uncertainty"],
+      "tags": ["ticket_rules", "booking_confidence", "dover_calais"],
+      "reliability_note": "Synthetic discussion-style validation record derived from current route-risk notes."
+    },
+    {
+      "id": "syn-report-001",
+      "source_family": "public_report",
+      "route": "newhaven-dieppe",
+      "journey_stage": "disruption",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Newhaven-Dieppe incident recovery needs compensation clarity",
+      "observation": "A realistic public-report follow-up would focus less on the incident itself and more on whether passengers understand compensation and recovery steps.",
+      "business_meaning": "Incident recovery can become the brand story if route-specific compensation messaging is unclear.",
+      "basis_evidence": ["Existing Newhaven-Dieppe route insight: compensation after onboard incident", "Existing recommendation: incident recovery communication playbook"],
+      "tags": ["incident_recovery", "compensation", "newhaven_dieppe"],
+      "reliability_note": "Synthetic public-report-style signal derived from existing route insight."
+    },
+    {
+      "id": "syn-report-002",
+      "source_family": "public_report",
+      "route": "jersey",
+      "journey_stage": "market_trust",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Jersey service trust should not be hidden by all-company averages",
+      "observation": "A realistic local-public signal would treat Jersey service confidence as a separate market concern rather than a general DFDS score issue.",
+      "business_meaning": "Jersey should have its own route or market lens when service-level confidence is discussed.",
+      "basis_evidence": ["Existing Jersey route insight: local service-level and freight-pricing concerns", "Existing recommendation: track Jersey separately"],
+      "tags": ["jersey", "market_trust", "service_confidence"],
+      "reliability_note": "Synthetic public-report-style validation signal derived from existing Jersey notes."
+    },
+    {
+      "id": "syn-location-001",
+      "source_family": "location_review",
+      "route": "dover-calais",
+      "journey_stage": "terminal",
+      "sentiment": "positive",
+      "published_at": "2026-07-20",
+      "title": "Dover-Calais terminal service can support route-level proof points",
+      "observation": "A realistic location-review summary would highlight staff help, terminal flow, and crossing support as strengths when the route works well.",
+      "business_meaning": "Positive route proof points should be paired with honest delay and border-control guidance.",
+      "basis_evidence": ["Existing Google location profiles mapped to Dover-Calais", "Existing insight: terminal and boarding proof points"],
+      "tags": ["terminal_service", "staff", "route_proof_point", "dover_calais"],
+      "reliability_note": "Synthetic location-review-style signal derived from existing Google location seed data."
+    },
+    {
+      "id": "syn-location-002",
+      "source_family": "location_review",
+      "route": "newhaven-dieppe",
+      "journey_stage": "boarding",
+      "sentiment": "positive",
+      "published_at": "2026-07-20",
+      "title": "Newhaven check-in and crossing signals can balance recovery messaging",
+      "observation": "A realistic location review would give useful positives around check-in and crossing experience, even when public reporting raises recovery questions.",
+      "business_meaning": "Campaigns can use operational strengths while keeping recovery messaging transparent.",
+      "basis_evidence": ["Existing Google location profile mapped to Newhaven-Dieppe", "Existing customer voice theme: terminal and boarding proof points"],
+      "tags": ["check_in", "crossing_experience", "newhaven_dieppe"],
+      "reliability_note": "Synthetic location-review-style signal derived from existing Google location seed data."
+    },
+    {
+      "id": "syn-location-003",
+      "source_family": "location_review",
+      "route": "newcastle-ijmuiden",
+      "journey_stage": "onboard",
+      "sentiment": "positive",
+      "published_at": "2026-07-20",
+      "title": "Newcastle onboard experience is useful if app expectations are clarified",
+      "observation": "A realistic location signal would separate onboard experience strengths from pre-trip app feature frustration.",
+      "business_meaning": "Route marketing can protect onboard strengths by fixing or explaining the digital pre-trip gap.",
+      "basis_evidence": ["Existing Google location profile mapped to Newcastle-IJmuiden", "Existing Apple review about mobile check-in availability"],
+      "tags": ["onboard_experience", "pre_trip_gap", "newcastle_ijmuiden"],
+      "reliability_note": "Synthetic location-review-style signal derived from existing location and app seed data."
+    },
+    {
+      "id": "syn-trust-001",
+      "source_family": "public_report",
+      "route": "all",
+      "journey_stage": "post_trip",
+      "sentiment": "negative",
+      "published_at": "2026-07-20",
+      "title": "Onboard friction themes are concrete enough to affect loyalty",
+      "observation": "A realistic negative review cluster would mention cabins, food quality, customer service, disembarkation, border control, or delays.",
+      "business_meaning": "These journey moments are specific enough to influence repeat purchase and recommendation.",
+      "basis_evidence": ["Existing Trustpilot negative review summary", "Existing evidence: boarding, cabins, and food are friction points"],
+      "tags": ["cabins", "food_quality", "service", "disembarkation", "delays"],
+      "reliability_note": "Synthetic cluster derived from existing Trustpilot summary, not a new Trustpilot scrape."
+    },
+    {
+      "id": "syn-trust-002",
+      "source_family": "public_report",
+      "route": "all",
+      "journey_stage": "brand",
+      "sentiment": "positive",
+      "published_at": "2026-07-20",
+      "title": "People-led service quality remains a brand strength",
+      "observation": "A realistic positive cluster would mention helpful staff and service recovery when the journey is otherwise stressful.",
+      "business_meaning": "Marketing can use staff and service quality as proof points when paired with transparent disruption messaging.",
+      "basis_evidence": ["Existing sentiment mix: majority positive Trustpilot reviews", "Existing customer voice theme: people-led service quality"],
+      "tags": ["staff", "service_quality", "brand_strength"],
+      "reliability_note": "Synthetic positive cluster derived from current Trustpilot and customer-voice seed themes."
+    },
+    {
+      "id": "syn-competitor-001",
+      "source_family": "competitor_signal",
+      "route": "dover-calais",
+      "journey_stage": "competitor_comparison",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Same-route competitors make Dover-Calais communication quality visible",
+      "observation": "A realistic competitor comparison would focus on ferry choice, frequency, route familiarity, and how clearly disruption expectations are explained.",
+      "business_meaning": "DFDS should benchmark route communication against same-route competitors before promoting convenience claims.",
+      "basis_evidence": ["Existing competitor table: same-route Dover-Calais competitors", "Existing recommendation: disruption messaging for delay-heavy routes"],
+      "tags": ["competitor_benchmark", "dover_calais", "route_communication"],
+      "reliability_note": "Synthetic competitor signal derived from existing competitor benchmark context."
+    },
+    {
+      "id": "syn-competitor-002",
+      "source_family": "competitor_signal",
+      "route": "jersey",
+      "journey_stage": "competitor_comparison",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Channel Islands comparison should separate passenger confidence from freight concerns",
+      "observation": "A realistic competitor lens would separate passenger journey expectations from broader Channel Islands service and pricing concerns.",
+      "business_meaning": "DFDS should avoid letting mixed market signals blur passenger-facing messaging.",
+      "basis_evidence": ["Existing competitor scope includes Channel Islands services", "Existing Jersey route insight: local service and pricing concerns"],
+      "tags": ["channel_islands", "competitor_benchmark", "passenger_scope"],
+      "reliability_note": "Synthetic competitor signal derived from current route and competitor context."
+    },
+    {
+      "id": "syn-discussion-003",
+      "source_family": "discussion",
+      "route": "all",
+      "journey_stage": "planning",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Passengers need plain-language journey expectations before comparing routes",
+      "observation": "A realistic travel planning thread would ask whether app features, arrival timing, onboard services, and disruption rules differ by route.",
+      "business_meaning": "The dashboard should preserve route-specific evidence rather than flattening all public signals into one brand average.",
+      "basis_evidence": ["Existing Data Basis scope note: routes with public signals only", "Existing route focus design"],
+      "tags": ["journey_expectations", "route_specificity", "planning"],
+      "reliability_note": "Synthetic discussion signal derived from current route-scope and data-basis notes."
+    },
+    {
+      "id": "syn-location-004",
+      "source_family": "location_review",
+      "route": "all",
+      "journey_stage": "terminal",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Location reviews should remain terminal-level, not brand-level",
+      "observation": "A realistic data-quality note would warn that Google Reviews reflect locations and terminals, not the full DFDS passenger brand.",
+      "business_meaning": "Location feedback should be mapped to routes before being used as marketing proof.",
+      "basis_evidence": ["Existing Data Basis note: Google Reviews are location-based", "Existing Google location profiles mapped to routes"],
+      "tags": ["data_quality", "location_review", "route_mapping"],
+      "reliability_note": "Synthetic data-quality signal derived from existing source methodology notes."
+    },
+    {
+      "id": "syn-report-003",
+      "source_family": "public_report",
+      "route": "all",
+      "journey_stage": "data_quality",
+      "sentiment": "mixed",
+      "published_at": "2026-07-20",
+      "title": "Synthetic records must remain visibly separated from scraped public evidence",
+      "observation": "A realistic audit note would require every validation record to carry provenance, confidence, and synthetic-source tags.",
+      "business_meaning": "The assistant can use these records for pipeline validation while still explaining that they are directional synthetic evidence.",
+      "basis_evidence": ["Current user requirement: create data without pretending it is real", "Existing schema supports metadata JSONB"],
+      "tags": ["provenance", "synthetic_source", "auditability", "data_quality"],
+      "reliability_note": "Synthetic audit record that documents the validation source itself."
+    },
+    {
+      "id": "syn-app-004",
+      "source_family": "app_store",
+      "route": "all",
+      "journey_stage": "support",
+      "sentiment": "negative",
+      "published_at": "2026-07-20",
+      "title": "App failures create support demand before the ferry journey starts",
+      "observation": "A realistic support-adjacent app comment would move from login failure to needing another contact channel to confirm the booking.",
+      "business_meaning": "Digital reliability affects both customer confidence and avoidable support demand.",
+      "basis_evidence": ["Existing Apple App Store evidence about account and booking access", "Existing recommendation: fix authentication and booking retrieval"],
+      "tags": ["support_demand", "app_reliability", "booking_confirmation"],
+      "reliability_note": "Synthetic app-store-style support signal derived from existing app friction evidence."
+    }
+  ]
+}
+  </script>
+</body>
+</html>

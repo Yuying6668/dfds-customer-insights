@@ -1,0 +1,9 @@
+booking_channel_id,channel_name,channel_type,device_type,campaign_type,booking_language,source_assumption_id
+chn_website,DFDS Website,direct,desktop,organic,English,src_market_research_01
+chn_mobile_app,Mobile App,direct,mobile,retention,English,src_market_research_01
+chn_travel_agency,Travel Agency,partner,desktop,partner,English,src_market_research_01
+chn_call_center,Call Center,assisted,assisted,service,English,src_market_research_01
+chn_email_campaign,Email Campaign,direct,desktop,promotion,English,src_market_research_01
+chn_search_engine,Search Engine,paid_search,desktop,acquisition,English,src_market_research_01
+chn_social_media,Social Media,paid_social,mobile,acquisition,English,src_market_research_01
+chn_returning_portal,Returning Customer Portal,direct,desktop,loyalty,English,src_market_research_01

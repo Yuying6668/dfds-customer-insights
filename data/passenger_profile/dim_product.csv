@@ -1,0 +1,11 @@
+product_id,product_name,product_category,cabin_or_seat_type,cabin_class,meal_package_flag,onboard_entertainment_flag,pet_travel_flag,priority_boarding_flag,flexible_ticket_flag,package_type,price_band,service_intensity,source_assumption_id
+prd_basic_seat,Basic Seat,seat,seat,standard,False,False,False,False,False,point_to_point,low,basic,src_official_products_01
+prd_standard_inside_cabin,Standard Inside Cabin,cabin,cabin,inside,False,False,False,False,False,overnight,mid,standard,src_official_products_01
+prd_sea_view_cabin,Sea View Cabin,cabin,cabin,sea_view,False,False,False,False,False,overnight,high,premium,src_official_products_01
+prd_commodore_cabin,Commodore Cabin,cabin,cabin,premium,True,True,False,True,True,overnight,premium,luxury,src_official_products_01
+prd_family_cabin_package,Family Cabin Package,family_package,cabin,family,True,True,False,False,True,family_break,high,premium,src_official_products_01
+prd_premium_lounge_pass,Premium Lounge Pass,lounge,lounge,premium,True,True,False,True,True,upgrade,premium,luxury,src_official_products_01
+prd_mini_cruise_package,Mini Cruise Package,mini_cruise,cabin,cruise,True,True,False,True,True,mini_cruise,high,premium,src_official_products_01
+prd_vehicle_crossing_basic,Vehicle Crossing Basic,vehicle_crossing,vehicle,standard,False,False,False,False,False,point_to_point,mid,basic,src_official_products_01
+prd_pet_friendly_travel,Pet Friendly Travel,pet_travel,cabin,pet_friendly,False,False,True,False,True,add_on,mid,standard,src_official_products_01
+prd_flexible_combi_ticket,Flexible Combi Ticket,flex_ticket,seat,standard,False,False,False,True,True,flex_ticket,mid,standard,src_official_products_01

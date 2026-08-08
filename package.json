@@ -1,0 +1,23 @@
+{
+	"scripts": {
+		"test": "node --test tests/*.mjs",
+		"build": "vite build --config vite.config.mjs",
+		"seed:export": "node work/export_seed_json.mjs",
+		"profile:dry-run": "python3 backend/passenger_profile_import.py --dry-run",
+		"profile:import": "python3 backend/passenger_profile_import.py",
+		"local:start": "python3 server.py",
+		"docker:up": "docker compose up --build",
+		"docker:down": "docker compose down",
+		"firecrawl:status": "firecrawl --status",
+		"firecrawl:login": "firecrawl login --browser",
+		"firecrawl:test": "mkdir -p .firecrawl && firecrawl scrape \"https://firecrawl.dev\" -o .firecrawl/install-check.md"
+	},
+	"devDependencies": {
+		"firecrawl-cli": "1.16.2",
+		"vite": "7.1.2"
+	},
+	"dependencies": {
+		"react": "19.2.7",
+		"react-dom": "19.2.7"
+	}
+}

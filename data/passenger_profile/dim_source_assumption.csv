@@ -1,0 +1,8 @@
+source_assumption_id,source_type,source_name,source_note,confidence_level,synthetic_rule_summary
+src_official_routes_01,official_website,DFDS route and destination pages,"Used to define route clusters, origin and destination ports, and route availability.",high,Official route catalog defines route geography and service structure.
+src_official_products_01,official_website,DFDS product and onboard experience pages,"Used to define cabin, seat, vehicle, meal, pet and lounge product mix.",high,Official product pages define product and package options.
+src_tourism_stats_01,public_statistics,Tourism and population statistics,"Used to approximate age, household and residence distributions by market.",medium,Population and tourism structure shape passenger demographics.
+src_review_themes_01,public_reviews,Tripadvisor and Google Reviews,"Used to infer recurring preference themes such as comfort, convenience and family travel.",medium,Review themes inform service preference and channel propensity.
+src_market_research_01,market_research,Competitor positioning and travel market reports,Used to infer segment mix and route-product affinity patterns.,medium,Competitive and market context guide segmentation weights.
+src_calendar_logic_01,derived_logic,Seasonal and holiday calendar logic,"Used to model weekend, school holiday and summer seasonality.",high,Calendar structure drives seasonality in synthetic trips.
+src_behavior_model_01,derived_logic,Synthetic behavioral model,Used to generate trip-level commercial behavior and spend.,medium,Trip values are generated from segment and route behavior rules.

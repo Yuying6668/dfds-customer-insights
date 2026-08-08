@@ -1,0 +1,72 @@
+export const reviewConsoleSeedItems = [
+  {
+    id: "seed-20260716-route-filter-scope",
+    title: "Route filter only appears where route focus changes content",
+    layer: "scope",
+    status: "approved",
+    severity: "medium",
+    source: "dashboard generation",
+    routeScope: "all",
+    reason: "July 16 logs required route focus to be hidden on App Reviews, Competitors, Survey CSV, Update Log, and Data Basis.",
+    recommendation: "Keep route controls limited to Overview, Customer Voice, and Recommendations.",
+    publish_state: "verified",
+    evidence_chain: ["input context", "UI route behavior", "supervisor judgment", "visibility decision"],
+    artifacts: ["dfds-customer-insights-logs/2026-07-16.md"]
+  },
+  {
+    id: "seed-20260717-source-limitations",
+    title: "Public source limitations are labeled honestly",
+    layer: "collection",
+    status: "needs_changes",
+    severity: "high",
+    source: "evidence import",
+    routeScope: "all",
+    reason: "Google Reviews are location-level, Reddit is discussion signal, and Firecrawl search-result snapshots are directional evidence.",
+    recommendation: "Show collection method and limitation labels before using source evidence in recommendations.",
+    publish_state: "internal_only",
+    evidence_chain: ["collection attempt", "source limitation", "normalized source row", "supervisor judgment"],
+    artifacts: ["dfds-customer-insights-logs/2026-07-17.md"]
+  },
+  {
+    id: "seed-20260720-rag-context",
+    title: "RAG answers use database, page context, and fallback evidence",
+    layer: "retrieval",
+    status: "pending",
+    severity: "high",
+    source: "RAG retrieval",
+    routeScope: "all",
+    reason: "PostgreSQL + pgvector, recent chat history, and frontend fallback evidence must work together.",
+    recommendation: "Flag answers that cite irrelevant evidence or miss obvious visible dashboard evidence.",
+    publish_state: "internal_only",
+    evidence_chain: ["page context", "evidence_items", "project_memories", "chat history", "supervisor judgment"],
+    artifacts: ["outputs/dfds-rag-validation-set.xlsx", "dfds-customer-insights-logs/2026-07-20.md"]
+  },
+  {
+    id: "seed-20260721-mia-weather-language",
+    title: "Mia weather and multilingual guardrails do not leak evidence cards",
+    layer: "language",
+    status: "pending",
+    severity: "high",
+    source: "chat answer",
+    routeScope: "all",
+    reason: "Weather, small talk, and off-topic prompts must skip retrieval; non-English evidence summaries must avoid long English evidence bodies.",
+    recommendation: "Test weather, greeting, Chinese Dover-Calais, and Danish prompts before publishing chat changes.",
+    publish_state: "internal_only",
+    evidence_chain: ["input message", "intent guard", "route detection", "language formatting", "supervisor judgment"],
+    artifacts: ["dfds-customer-insights-logs/2026-07-21.md"]
+  },
+  {
+    id: "seed-20260718-21-cache-release",
+    title: "Frontend cache-busting and Update Log sequencing are checked",
+    layer: "release",
+    status: "needs_changes",
+    severity: "medium",
+    source: "release hygiene",
+    routeScope: "all",
+    reason: "Browser cache repeatedly caused old dashboard or Mia logic to stay visible.",
+    recommendation: "Require cache versions, Update Log, and daily logs to move together for frontend releases.",
+    publish_state: "internal_only",
+    evidence_chain: ["module change", "cache version", "Update Log entry", "daily log", "supervisor judgment"],
+    artifacts: ["dfds-customer-insights-logs/2026-07-18.md", "dfds-customer-insights-logs/2026-07-21.md"]
+  }
+];
