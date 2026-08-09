@@ -1,5 +1,6 @@
 .firecrawl/
 .superpowers/
+.worktrees/
 data/upload_batches/
 node_modules/
 .venv/
