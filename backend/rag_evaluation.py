@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from backend.mia_graph.evaluation import promotion_decision
+
 
 def _first_relevant_rank(expected_ids, retrieved_ids, maximum_rank):
     expected = {str(value) for value in expected_ids}

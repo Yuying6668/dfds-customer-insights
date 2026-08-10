@@ -21,6 +21,10 @@ from openpyxl import load_workbook
 
 from backend import hybrid_retrieval, rag_embeddings
 from backend.identity import hash_password, normalize_username, validate_registration_username, verify_password
+from backend.mia_graph.conversation import build_conversation_graph
+from backend.mia_graph.dataset import run_dataset_graph
+from backend.mia_graph.observability import graph_audit_record
+from backend.mia_graph.policy import assess_untrusted_text
 from backend.upload_http import parse_multipart_files
 from backend.upload_ingest import MAX_BATCH_BYTES, UploadValidationError, _cleaned_batch_sheets, export_cleaned_batch, load_batch_manifest, prepare_batch, save_cleaned_batch, uploaded_sheet_page
 from work.dataset_run import DatasetRunError, build_analysis_snapshot, event_envelope, publish_run
@@ -2267,6 +2271,44 @@ def call_deepseek(payload, rag_context):
     }
 
 
+class ServerConversationServices:
+    """Adapter which exposes existing deterministic server capabilities as graph nodes."""
+
+    def __init__(self, payload, identity):
+        self.payload = payload
+        self.identity = identity
+
+    def route_request(self, state):
+        return {"route": classify_conversation_mode(state["message"])}
+
+    def retrieve_evidence(self, state):
+        rag_context = build_rag_context(self.payload)
+        safe_evidence = []
+        for item in rag_context.get("evidenceItems", []):
+            # Evidence is untrusted data: suspicious instruction-like content is excluded.
+            if not assess_untrusted_text(json.dumps(item, ensure_ascii=False)):
+                safe_evidence.append(item)
+        rag_context["evidenceItems"] = safe_evidence
+        return {"rag_context": rag_context, "evidence_ids": [str(item.get("id")) for item in safe_evidence if item.get("id") is not None]}
+
+    def generate_answer(self, state):
+        status, result = call_deepseek(self.payload, state["rag_context"])
+        answer = {
+            "text": result.get("answer", ""),
+            "evidence_ids": state.get("evidence_ids", []),
+            "confidence": 0.96 if state.get("evidence_ids") else 0.70,
+            "recommendation": result.get("recommendation", ""),
+            "suspected_injection": False,
+        }
+        return {"status": status, "result": result, "answer": answer}
+
+    def validate_draft(self, state):
+        return {}
+
+    def queue_review(self, state):
+        return {"publication_state": "pending_human_review"}
+
+
 def build_it_data_flow_review_context(manifest, cleaned_sheets=None):
     fields = []
     evidence = []
@@ -2568,6 +2610,30 @@ def record_rag_usage(identity, session_id, answer, rag_context, usage):
         conn.close()
 
 
+def record_graph_audit(record):
+    """Persist only the allow-listed redacted audit record; failure never exposes request data."""
+    conn = connect_db()
+    if conn is None:
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO graph_run_audits (graph_name, graph_version, idempotency_key, status, trace_id, metadata)
+                VALUES (%s, %s, %s, %s, %s, %s::jsonb)
+                """,
+                (
+                    record.get("graph", "unknown"), record.get("graph_version", "unknown"), record.get("idempotency_key"),
+                    record.get("status", "unknown"), record.get("trace_id"), json.dumps(record),
+                ),
+            )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+    finally:
+        conn.close()
+
+
 def conversation_preview(row):
     """Return a bounded, JSON-safe audit record without authentication secrets."""
     created_at = row.get("created_at")
@@ -2654,6 +2720,12 @@ def _process_dataset_run(batch_id, event_id):
         run = manifest["batch"]["datasetRun"]
         published = manifest
         snapshot = build_analysis_snapshot(published, _analysis_sheets(sheets))
+        snapshot = run_dataset_graph(
+            snapshot,
+            run_id=str(run.get("publishedAt") or batch_id),
+            graph_version="mia-graph-v1",
+            evidence_ids=[],
+        )
         snapshot_path = batch_dir / "analytics.json"
         snapshot_path.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
         run["analysisState"] = "ready"
@@ -3554,12 +3626,23 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(422, {"error": str(exc)})
                 return
 
-        rag_context = build_rag_context(payload)
+        graph = build_conversation_graph(ServerConversationServices(payload, identity))
         synthesis_started = time.perf_counter()
-        status, result = call_deepseek(payload, rag_context)
+        graph_state = graph.invoke({"message": str(payload["message"]), "actor_id": str(identity["id"]), "request_id": str(payload.get("sessionId") or uuid.uuid4())})
+        status = graph_state.get("status", 500)
+        result = graph_state.get("result", {"error": "Conversation graph did not return an answer"})
+        rag_context = graph_state.get("rag_context", {"retrieval": {"layers": []}})
         rag_context["retrieval"]["layers"].append(
             {"name": "response_synthesis", "durationMs": round((time.perf_counter() - synthesis_started) * 1000, 1), "records": 1 if status == 200 else 0}
         )
+        result["graph"] = graph_audit_record({
+            "graph": "conversation", "graph_version": "mia-graph-v1", "request_id": graph_state.get("request_id"),
+            "status": graph_state.get("publication_state", "failed"), "evidence_ids": graph_state.get("evidence_ids", []),
+            "verdict": (graph_state.get("review") or {}).get("reasons", []),
+        })
+        record_graph_audit(result["graph"])
+        result["review"] = graph_state.get("review", {})
+        result["publicationState"] = graph_state.get("publication_state", "failed")
         if status == 200:
             usage = measure_usage(payload, result.get("answer", ""), rag_context, result.get("providerUsage"))
             session_id = store_chat_turn(payload, result.get("answer", ""), rag_context, identity)

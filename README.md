@@ -28,3 +28,9 @@ python3 scripts/build_survey_outputs.py
 ```
 
 Create delivery work on the `Mia` branch. Keep `.env`, virtual environments, caches, generated exports, and local credentials untracked.
+
+## Mia graph operations
+
+The bounded Mia graphs use `LANGGRAPH_CHECKPOINT_DATABASE_URL` for PostgreSQL checkpoints. Without it, local development uses an in-memory checkpoint. Optional Langfuse configuration is `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST`.
+
+Before enabling external processors, confirm an approved DPA, data residency, retention period, source authority, and DPIA screening. Traces and `graph_run_audits` contain only request hashes, graph/config versions, timing, evidence IDs, scores, and verdicts; raw prompts, reviews, uploads, identity values, and credentials must never be sent to observability providers or stored in graph audit metadata.

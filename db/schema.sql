@@ -484,6 +484,18 @@ CREATE TABLE IF NOT EXISTS review_item_actions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Deliberately excludes prompts, reviews, uploads, and user identifiers.
+CREATE TABLE IF NOT EXISTS graph_run_audits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  graph_name TEXT NOT NULL,
+  graph_version TEXT NOT NULL,
+  idempotency_key TEXT,
+  status TEXT NOT NULL,
+  trace_id TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_routes_key ON routes(route_key);
 CREATE INDEX IF NOT EXISTS idx_sources_key ON sources(source_key);
 CREATE INDEX IF NOT EXISTS idx_evidence_source ON evidence_items(source_id);
@@ -525,6 +537,7 @@ CREATE INDEX IF NOT EXISTS idx_review_items_metadata_gin ON review_items USING g
 CREATE INDEX IF NOT EXISTS idx_review_item_evidence_evidence ON review_item_evidence(evidence_id);
 CREATE INDEX IF NOT EXISTS idx_review_item_keywords_keyword ON review_item_keywords(keyword_id);
 CREATE INDEX IF NOT EXISTS idx_review_item_raw_reviews_raw_review ON review_item_raw_reviews(raw_review_id);
+CREATE INDEX IF NOT EXISTS idx_graph_run_audits_graph_created ON graph_run_audits(graph_name, created_at DESC);
 CREATE INDEX IF NOT EXISTS evidence_embedding_idx
   ON evidence_items USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 10);
