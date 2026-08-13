@@ -65,7 +65,15 @@ function LoginPage() {
   const openWorkspace = (role) => window.location.assign(startWorkspaceSession(role));
   return <section className="login-shell">
     <aside className="login-brand">
-      <div className="login-lockup"><span className="login-mark" aria-hidden="true">M</span><span className="login-divider" />MIA'S CRUISES</div>
+      <div className="login-lockup">
+        <svg className="login-mark" viewBox="0 0 48 48" role="img" aria-label="Mia's Cruises logo">
+          <rect width="48" height="48" rx="8" fill="#063556" />
+          <path d="M13 28.5 24 13l11 15.5H13Z" fill="#fff" />
+          <path d="M17 30.5c3.1 1.8 6.1 1.8 9.1 0 3.1-1.8 6.1-1.8 9.1 0" fill="none" stroke="#8ed6e8" strokeLinecap="round" strokeWidth="2.5" />
+          <path d="M14 35c3.1 1.8 6.1 1.8 9.1 0 3.1-1.8 6.1-1.8 9.1 0" fill="none" stroke="#8ed6e8" strokeLinecap="round" strokeWidth="2.5" />
+        </svg>
+        <span className="login-divider" />MIA'S CRUISES
+      </div>
       <div className="login-copy"><p>CONNECTED OPERATIONS</p><h1>Every decision,<br />in view.</h1><span>One workspace for governed data intake, customer insight and business decisions.</span></div>
       <div className="login-pulse" aria-label="Current operational status"><div><span>System pulse</span><strong><i />Live</strong></div><p><i className="good" />Data pipeline <b>Ready</b></p><p><i className="good" />Decision workspace <b>Ready</b></p><p><i className="review" />Review queue <b>Monitored</b></p></div>
       <small className="login-footer">Mia's Cruises Customer Intelligence</small>

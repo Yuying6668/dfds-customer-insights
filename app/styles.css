@@ -74,7 +74,7 @@ button {
 }
 
 .login-lockup { display: flex; position: relative; z-index: 1; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; letter-spacing: 1.4px; }
-.login-mark { display: grid; width: 29px; height: 29px; place-items: center; border: 2px solid #fff; border-radius: 50%; font-size: 15px; font-family: Georgia, serif; }
+.login-mark { display: block; width: 32px; height: 32px; }
 .login-divider { width: 1px; height: 20px; background: rgba(255, 255, 255, 0.45); }
 .login-copy { position: relative; z-index: 1; max-width: 395px; margin: auto 0 42px; }
 .login-copy > p, .login-eyebrow { margin: 0 0 10px; color: #91b7dd; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; }
