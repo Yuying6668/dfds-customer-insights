@@ -3658,7 +3658,32 @@ def user_history(identity, limit=100):
 def admin_observability():
     conn = connect_db()
     if conn is None:
-        return {"connected": False, "layers": [], "routeMonitoring": [], "tokens": {"input": 0, "output": 0, "total": 0, "requests": 0}, "users": []}
+        # Keep the administrator demo useful on Render even when PostgreSQL is not configured.
+        # Aggregate the same deterministic 166-event stream used by the database seeder.
+        events = build_demo_events()
+        layer_totals = {}
+        users = {}
+        routes = {}
+        for event in events:
+            users.setdefault(event["username"], {"username": event["username"], "requests": 0, "total_tokens": 0, "last_seen_at": event["created_at"]})
+            users[event["username"]]["requests"] += 1
+            users[event["username"]]["total_tokens"] += event["total_tokens"]
+            users[event["username"]]["last_seen_at"] = max(users[event["username"]]["last_seen_at"], event["created_at"])
+            route = routes.setdefault(event["route_key"], {"route_key": event["route_key"], "route_name": event["route_name"], "requests": 0, "total_tokens": 0, "latencies": [], "records": 0, "last_seen_at": event["created_at"]})
+            route["requests"] += 1
+            route["total_tokens"] += event["total_tokens"]
+            route["last_seen_at"] = max(route["last_seen_at"], event["created_at"])
+            layers = event["retrieval_trace"]["layers"]
+            route["latencies"].append(sum(layer["durationMs"] for layer in layers))
+            route["records"] += sum(layer["records"] for layer in layers)
+            for layer in layers:
+                aggregate = layer_totals.setdefault(layer["name"], {"name": layer["name"], "requests": 0, "latency_ms": 0, "records": 0})
+                aggregate["requests"] += 1
+                aggregate["latency_ms"] += layer["durationMs"]
+                aggregate["records"] += layer["records"]
+        layers = [{**item, "latency_ms": round(item["latency_ms"] / item["requests"], 1)} for item in layer_totals.values()]
+        route_rows = [{**item, "avg_latency_ms": round(sum(item.pop("latencies")) / item["requests"], 1)} for item in routes.values()]
+        return {"connected": False, "demo": {"batch": DEMO_BATCH, "events": DEMO_EVENT_COUNT}, "layers": layers, "routeMonitoring": summarize_route_monitoring(route_rows), "tokens": {"input": sum(event["input_tokens"] for event in events), "output": sum(event["output_tokens"] for event in events), "total": sum(event["total_tokens"] for event in events), "requests": DEMO_EVENT_COUNT}, "users": list(users.values())}
     try:
         with conn.cursor() as cur:
             cur.execute(
