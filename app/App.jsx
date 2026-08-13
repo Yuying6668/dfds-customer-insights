@@ -164,7 +164,6 @@ export function App() {
 
   const showRouteFocus = isRouteAware(activePath);
   const showDatasetSelector = ["/overview", "/recommendations", "/customer-voice", "/app-reviews", "/passenger-profile", "/competitors"].includes(activePath);
-  const schemaUnavailable = activeDatasetRun !== "public" && ["/customer-voice", "/app-reviews", "/passenger-profile", "/competitors"].includes(activePath);
 
   return (
     <div className="shell">
@@ -247,7 +246,7 @@ export function App() {
           </div>
         </header>
 
-        {schemaUnavailable ? <section className="view active"><PageSummary title="This uploaded schema does not support this view" description="The selected dataset is available in Overview and Recommendations. This view needs source-specific dimensions that were not published with the current run." points={[]} /></section> : <RouteComponent
+        <RouteComponent
           data={data}
           routeFocus={routeFocus}
           setRouteFocus={setRouteFocus}
@@ -257,7 +256,7 @@ export function App() {
           initialUploadedBatch={uploadSession[activeView] || null}
           activeDatasetRun={activeDatasetRun}
           datasetRuns={datasetRuns}
-        />}
+        />
       </main>
 
       <ChatWidget pathname={activePath} routeFocus={routeFocus} uploadBatchId={uploadedBatchId} />

@@ -1,5 +1,7 @@
 import React from "react";
 import { DataTable, MetricCard, Panel, PageSummary } from "../components/common.jsx";
+import { UploadedInsightPanel } from "../components/UploadedInsightPanel.jsx";
+import { useDatasetInsight } from "../hooks/use-dataset-insight.mjs";
 
 function SliceBars({ items, valueKey = "trips" }) {
   const maxValue = Math.max(...items.map((item) => Number(item[valueKey]) || 0), 1);
@@ -22,6 +24,7 @@ function SliceBars({ items, valueKey = "trips" }) {
 }
 
 export function PassengerProfileRoute({ data }) {
+  const { analytics, loading, supported } = useDatasetInsight("passenger-profile");
   const profile = data.passengerProfileSummary;
   const actarRows = profile.actarSlices.map((slice) => ({
     key: `${slice.actionArea}-${slice.customerTarget}`,
@@ -34,6 +37,7 @@ export function PassengerProfileRoute({ data }) {
 
   return (
     <section className="view active">
+      {loading ? <PageSummary title="Uploaded data is processing" description="Passenger Profile will refresh when the published analysis is ready." points={[]} /> : supported ? <UploadedInsightPanel analytics={analytics} title="Passenger Profile from uploaded data" /> : null}
       <PageSummary
         eyebrow="Passenger profile sub-agent"
         title="Who rides which routes, and what do they seem to prefer?"

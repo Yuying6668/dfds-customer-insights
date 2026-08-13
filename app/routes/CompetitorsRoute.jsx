@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { BulletList, Panel, PageSummary } from "../components/common.jsx";
+import { UploadedInsightPanel } from "../components/UploadedInsightPanel.jsx";
+import { useDatasetInsight } from "../hooks/use-dataset-insight.mjs";
 
 function parseReviewCount(value) {
   const match = String(value || "").replace(/,/g, "").match(/\d+/);
@@ -21,6 +23,7 @@ function displayCompetitorText(text) {
 export function CompetitorsRoute({ data }) {
   const [filter, setFilter] = useState("");
   const [sort, setSort] = useState("default");
+  const { analytics, loading, supported } = useDatasetInsight("competitors");
 
   const rows = useMemo(() => {
     const query = filter.trim().toLowerCase();
@@ -48,6 +51,7 @@ export function CompetitorsRoute({ data }) {
 
   return (
     <section className="view active">
+      {loading ? <PageSummary title="Uploaded data is processing" description="Competitor context will refresh when the published analysis is ready." points={[]} /> : supported ? <UploadedInsightPanel analytics={analytics} title="Market signal from uploaded data" /> : null}
       <PageSummary
         title="See how Mia's Cruises compares with other ferry brands"
         description="This page shows which ferry companies matter for comparison, how customers rate them, and where their routes overlap with Mia's Cruises."
