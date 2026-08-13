@@ -166,7 +166,7 @@ export function App() {
       let node = walker.nextNode();
 
       while (node) {
-        if (node.nodeValue.includes("DFDS")) nodes.push(node);
+        if (/dfds/i.test(node.nodeValue)) nodes.push(node);
         node = walker.nextNode();
       }
 

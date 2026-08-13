@@ -1,6 +1,6 @@
-# DFDS Customer Insights / MIA
+# Mia's Cruises Customer Insights / MIA
 
-This repository consolidates the DFDS customer-insights product and its MIA (Mia's Cruises) interview-facing experience. It includes the React/Vite dashboard, Python ingestion and retrieval services, database schema, survey/RAG pipeline, test suites, and dated design and delivery logs.
+This repository contains the Mia's Cruises customer-insights product and MIA experience. It includes the React/Vite dashboard, Python ingestion and retrieval services, database schema, survey/RAG pipeline, test suites, and dated design and delivery logs.
 
 ## Layout
 
@@ -21,7 +21,7 @@ pnpm test
 pnpm build
 ```
 
-The survey pipeline is explicitly synthetic and is not evidence about real DFDS passengers:
+The survey pipeline is explicitly synthetic and is not evidence about real Mia's Cruises passengers:
 
 ```bash
 python3 scripts/build_survey_outputs.py

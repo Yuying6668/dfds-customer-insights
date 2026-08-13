@@ -8,12 +8,12 @@ function makeOverviewBrief(route) {
   const routeInsight = data.routeInsights[route] || data.routeInsights.all;
   const googleProfiles = data.googleReviewLocations.map((location) => `${location.name}: ${location.rating}, ${location.reviews}`).join("; ");
   return [
-    "DFDS Overview Brief",
+    "Mia's Cruises Overview Brief",
     `Collected: ${data.collectedAt}`,
     "",
     "Topline:",
-    "- DFDS has a strong overall Trustpilot score: 4.2/5 from 20,646 reviews.",
-    "- The DFDS Passenger app is the clearest marketing watchout: Google Play is 2.5/5 and Apple App Store is 3.3/5 in the GB view.",
+    "- Mia's Cruises has a strong overall Trustpilot score: 4.2/5 from 20,646 reviews.",
+    "- The Mia's Cruises Passenger app is the clearest marketing watchout: Google Play is 2.5/5 and Apple App Store is 3.3/5 in the GB view.",
     `- Google Reviews have been added at location level: ${googleProfiles}.`,
     "- Main marketing risk: app friction may reduce customer confidence before the trip starts.",
     "",
@@ -27,7 +27,7 @@ function makeSignalsBrief(route) {
   const routeInsight = data.routeInsights[route] || data.routeInsights.all;
   const themes = getVoiceThemes(route);
   return [
-    "DFDS Customer Voice Brief",
+    "Mia's Cruises Customer Voice Brief",
     `Route focus: ${routeInsight.title}`,
     `Collected: ${data.collectedAt}`,
     "",
@@ -50,7 +50,7 @@ function makeSignalsBrief(route) {
 
 function makeAppReviewsBrief() {
   return [
-    "DFDS App Reviews Brief",
+    "Mia's Cruises App Reviews Brief",
     `Collected: ${data.collectedAt}`,
     "",
     "App store snapshot:",
@@ -67,7 +67,7 @@ function makeAppReviewsBrief() {
 function makeCompetitorsBrief() {
   const direct = data.competitors.filter((row) => row.category.includes("Same"));
   return [
-    "DFDS Competitor Brief",
+    "Mia's Cruises Competitor Brief",
     `Collected: ${data.collectedAt}`,
     "",
     "Selection basis:",
@@ -81,7 +81,7 @@ function makeCompetitorsBrief() {
     numbered(direct.map((row) => `${row.company}: ${row.overlap} Customer view: ${row.userView}`)),
     "",
     "Marketing use:",
-    "Use this view to decide where DFDS should defend its position, borrow stronger competitor practices, or sharpen differentiation."
+    "Use this view to decide where Mia's Cruises should defend its position, borrow stronger competitor practices, or sharpen differentiation."
   ].join("\n");
 }
 
@@ -89,7 +89,7 @@ function makeRecommendationsBrief(route) {
   const routeInsight = data.routeInsights[route] || data.routeInsights.all;
   const recs = data.recommendations.filter((item) => !item.routes || item.routes.includes(route) || route === "all");
   return [
-    "DFDS Marketing Recommendations Brief",
+    "Mia's Cruises Marketing Recommendations Brief",
     `Route focus: ${routeInsight.title}`,
     `Collected: ${data.collectedAt}`,
     "",
@@ -103,7 +103,7 @@ function makeRecommendationsBrief(route) {
 
 function makeSurveyBrief() {
   return [
-    "DFDS Survey CSV Brief",
+    "Mia's Cruises Survey CSV Brief",
     `Collected: ${data.collectedAt}`,
     "",
     "Current status:",
@@ -117,7 +117,7 @@ function makeSurveyBrief() {
 
 function makeUpdateLogBrief() {
   return [
-    "DFDS Update Log Brief",
+    "Mia's Cruises Update Log Brief",
     `Collected: ${data.collectedAt}`,
     "",
     "Recent dashboard changes:",
@@ -130,14 +130,14 @@ function makeUpdateLogBrief() {
 
 function makeDataBasisBrief() {
   return [
-    "DFDS Data Basis Brief",
+    "Mia's Cruises Data Basis Brief",
     `Collected: ${data.collectedAt}`,
     "",
     "Sources covered:",
     numbered(data.sourceCoverage.map((source) => `${source.source}: ${source.records}. Status: ${source.status}.`)),
     "",
     "Analysis scope:",
-    "- This dashboard focuses on DFDS passenger ferry customers.",
+    "- This dashboard focuses on Mia's Cruises passenger ferry customers.",
     "- Freight and logistics customers are outside the current analysis scope.",
     "- Competitor data is interpreted in the passenger ferry context.",
     "",

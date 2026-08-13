@@ -2,19 +2,19 @@ export const appStores = [
   {
     "platform": "Google Play",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Google_Play_2022_logo.svg",
-    "app": "DFDS - Passenger",
+    "app": "Mia's Cruises - Passenger",
     "package": "com.dfds.pax",
     "rating": "2.5 / 5",
     "normalized": 50,
     "reviewCount": "64 reviews",
     "status": "Rating found",
     "url": "https://play.google.com/store/apps/details?id=com.dfds.pax&hl=en&gl=GB",
-    "summary": "The Android app score is much weaker than DFDS' overall brand review score."
+    "summary": "The Android app score is much weaker than Mia's Cruises' overall brand review score."
   },
   {
     "platform": "Apple App Store",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
-    "app": "DFDS - Passenger",
+    "app": "Mia's Cruises - Passenger",
     "package": "com.dfds.pax",
     "rating": "3.3 / 5",
     "normalized": 66,

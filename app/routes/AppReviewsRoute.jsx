@@ -12,7 +12,7 @@ export function AppReviewsRoute({ data }) {
     <section className="view active">
       <PageSummary
         title="Check if the app is helping customers"
-        description="This page shows how people rate the DFDS Passenger app and what they struggle with before or during their trip."
+        description="This page shows how people rate the Mia's Cruises Passenger app and what they struggle with before or during their trip."
         points={[
           { label: "Look first", text: "Compare Android and iOS ratings." },
           { label: "Watch for", text: "Login, booking, ticket, and route-information issues." },
@@ -20,7 +20,7 @@ export function AppReviewsRoute({ data }) {
         ]}
       />
 
-      <Panel title="DFDS Passenger app intelligence" eyebrow="Mobile app reviews" pill="Apple + Android">
+      <Panel title="Mia's Cruises Passenger app intelligence" eyebrow="Mobile app reviews" pill="Apple + Android">
         <div className="store-grid">
           {data.appStores.map((store) => (
             <article key={store.platform} className="app-store-card">
