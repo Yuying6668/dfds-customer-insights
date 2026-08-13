@@ -138,7 +138,7 @@ export function AgentControlRoute() {
   return <section className="agent-control">
     <header className="agent-control-header">
       <div><p className="eyebrow">Administrator workspace</p><h2>Agent Control</h2><p>Live monitoring for retrieval activity, model usage, and recent operator conversations.</p></div>
-      <div className="agent-control-header-actions"><span className="agent-live-indicator"><i />Live demo stream</span><a className="agent-control-exit" href="/it-data-flow">Open project workspace</a></div>
+      <div className="agent-control-header-actions"><span className="agent-live-indicator"><i />Live demo stream</span><a className="agent-control-exit" href="/">Back to workspace entry</a><a className="agent-control-exit" href="/it-data-flow">Open project workspace</a></div>
     </header>
 
     <Panel title="Agent data transmission" eyebrow="Live simulation" pill="Streaming">
