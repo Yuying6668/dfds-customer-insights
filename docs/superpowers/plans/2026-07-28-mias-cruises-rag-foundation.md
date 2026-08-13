@@ -1,4 +1,4 @@
-# DFDS RAG Foundation Implementation Plan
+# Mia's Cruises RAG Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -43,7 +43,7 @@
 ```python
 def test_bm25_returns_expected_evidence_in_top_five():
     rows = [
-        {"id": 11, "body": "DFDS app login loop hid a booking", "route_key": "dover-calais", "source_tier": "public_snapshot", "is_synthetic": False},
+        {"id": 11, "body": "Mia's Cruises app login loop hid a booking", "route_key": "dover-calais", "source_tier": "public_snapshot", "is_synthetic": False},
         {"id": 12, "body": "Onboard food was pleasant", "route_key": "all", "source_tier": "public_snapshot", "is_synthetic": False},
     ]
     result = retrieval.rank_evidence("app login booking", rows, route_key="dover-calais", limit=5)

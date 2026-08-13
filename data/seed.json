@@ -992,7 +992,7 @@
       "change": "Replaced the standalone HANDOFF.md with dated daily logs",
       "reason": "The user wanted a persistent, easier-to-scan record of project progress instead of a single handoff file.",
       "scope": "Project documentation, frontend status, chat assistant status, local RAG status, Update Log process",
-      "result": "The project now keeps dated logs under dfds-customer-insights-logs/, with a README index and one daily markdown file per date.",
+      "result": "The project now keeps dated logs under mias-cruises-customer-insights-logs/, with a README index and one daily markdown file per date.",
       "status": "Completed"
     },
     {

@@ -21,7 +21,7 @@
 | \`tests/survey-csv-state.test.mjs\` | Unit coverage for types, lifecycle, and counts. |
 | \`tests/survey-csv-route.test.mjs\` | Route regions and style-hook regression coverage. |
 | \`app/data/update-log.mjs\` | Release record, updated before daily log. |
-| \`dfds-customer-insights-logs/2026-07-30.md\` | Implementation and verification record. |
+| \`mias-cruises-customer-insights-logs/2026-07-30.md\` | Implementation and verification record. |
 
 ### Task 1: Define Survey CSV Intake State
 
@@ -195,7 +195,7 @@ git commit -m "style: align survey csv with data flow workspace"
 
 **Files:**
 - Modify: \`app/data/update-log.mjs\`
-- Create: \`dfds-customer-insights-logs/2026-07-30.md\`
+- Create: \`mias-cruises-customer-insights-logs/2026-07-30.md\`
 
 - [ ] **Step 1: Add the update-log record before the daily log**
 
@@ -231,7 +231,7 @@ Verify at \`http://127.0.0.1:8767/survey-csv\`: a PDF shows an inline error with
 - [ ] **Step 5: Commit release records**
 
 \`\`\`bash
-git add app/data/update-log.mjs dfds-customer-insights-logs/2026-07-30.md
+git add app/data/update-log.mjs mias-cruises-customer-insights-logs/2026-07-30.md
 git commit -m "docs: record survey csv data flow release"
 \`\`\`
 

@@ -101,7 +101,7 @@ This makes the following capabilities visible:
 
 ## Visual Direction
 
-- Retain the existing DFDS application shell and restrained blue, white, and neutral palette.
+- Retain the existing Mia's Cruises application shell and restrained blue, white, and neutral palette.
 - Use open workspace layout rather than nested panels and card grids.
 - Use a thin lifecycle strip and tables where data comparison matters.
 - Reserve cards for selected files, review exceptions, and the Mia drawer only.

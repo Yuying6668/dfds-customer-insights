@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the public-facing DFDS identity with Mia's Cruises and remove the sidebar logo without changing runtime data contracts.
+**Goal:** Replace the public-facing Mia's Cruises identity with Mia's Cruises and remove the sidebar logo without changing runtime data contracts.
 
 **Architecture:** Keep the existing React shell and data model intact. Change only display strings in the React UI and retain the existing `dfdsIntelligenceData` export and source data identifiers.
 
@@ -23,10 +23,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-test("the application shell presents Mia's Cruises without the DFDS logo", async () => {
+test("the application shell presents Mia's Cruises without the Mia's Cruises logo", async () => {
   const app = await readFile(new URL("../app/App.jsx", import.meta.url), "utf8");
   assert.match(app, /Mia's Cruises/);
-  assert.doesNotMatch(app, /DFDS_logo_2015\.svg/);
+  assert.doesNotMatch(app, /Mia's Cruises_logo_2015\.svg/);
   assert.doesNotMatch(app, /brand-logo-card/);
 });
 ```
@@ -35,7 +35,7 @@ test("the application shell presents Mia's Cruises without the DFDS logo", async
 
 Run: `node --test tests/branding.test.mjs`
 
-Expected: FAIL because the shell still contains the DFDS logo and no Mia's Cruises label.
+Expected: FAIL because the shell still contains the Mia's Cruises logo and no Mia's Cruises label.
 
 - [ ] **Step 3: Implement the minimal shell change**
 

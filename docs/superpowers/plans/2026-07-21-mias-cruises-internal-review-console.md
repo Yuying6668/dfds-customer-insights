@@ -1,8 +1,8 @@
-# DFDS Internal Review Console Implementation Plan
+# Mia's Cruises Internal Review Console Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a standalone internal review console that lets the DFDS team inspect validation/reflection results, evidence chains, and publish readiness before new agent outputs are surfaced in the dashboard.
+**Goal:** Build a standalone internal review console that lets the Mia's Cruises team inspect validation/reflection results, evidence chains, and publish readiness before new agent outputs are surfaced in the dashboard.
 
 **Architecture:** Add a normalized review data layer to PostgreSQL, expose read/update review endpoints from the existing Python backend, and add a new static JS dashboard page using the existing module pattern. The first version seeds representative review records from the July 16-21 project logs so the console is immediately useful even before live validator agents write records.
 
@@ -18,7 +18,7 @@
 - Do not call Firecrawl or any paid/external crawler while implementing this console.
 - Keep DeepSeek keys out of frontend files, `package.json`, logs, and committed project files.
 - After frontend module changes, update `app/index.html` cache-busting and `app/app.js` module import versions.
-- Update `app/data/update-log.mjs` before updating `dfds-customer-insights-logs/2026-07-21.md`.
+- Update `app/data/update-log.mjs` before updating `mias-cruises-customer-insights-logs/2026-07-21.md`.
 
 ## File Map
 
@@ -31,7 +31,7 @@
 - Modify `app/index.html`: add nav item and `reviewconsole` view.
 - Modify `app/styles.css`: add dense internal console layout and responsive behavior.
 - Modify `app/data/update-log.mjs`: add product update entry.
-- Modify `dfds-customer-insights-logs/2026-07-21.md`: record the implementation and verification.
+- Modify `mias-cruises-customer-insights-logs/2026-07-21.md`: record the implementation and verification.
 
 ## Task 1: Database Review Tables
 
@@ -276,7 +276,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Keep route controls limited to Overview, Customer Voice, and Recommendations.",
         "publish_state": "verified",
         "evidence_chain": ["input context", "UI route behavior", "supervisor judgment", "visibility decision"],
-        "artifacts": ["dfds-customer-insights-logs/2026-07-16.md"],
+        "artifacts": ["mias-cruises-customer-insights-logs/2026-07-16.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-16"},
     },
     {
@@ -291,7 +291,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Show collection method and limitation labels before using source evidence in recommendations.",
         "publish_state": "internal_only",
         "evidence_chain": ["collection attempt", "source limitation", "normalized source row", "supervisor judgment"],
-        "artifacts": ["dfds-customer-insights-logs/2026-07-17.md"],
+        "artifacts": ["mias-cruises-customer-insights-logs/2026-07-17.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-17"},
     },
     {
@@ -306,7 +306,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Flag answers that cite irrelevant evidence or miss obvious visible dashboard evidence.",
         "publish_state": "internal_only",
         "evidence_chain": ["page context", "evidence_items", "project_memories", "chat history", "supervisor judgment"],
-        "artifacts": ["outputs/dfds-rag-validation-set.xlsx", "dfds-customer-insights-logs/2026-07-20.md"],
+        "artifacts": ["outputs/dfds-rag-validation-set.xlsx", "mias-cruises-customer-insights-logs/2026-07-20.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-20"},
     },
     {
@@ -321,7 +321,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Test weather, greeting, Chinese Dover-Calais, and Danish prompts before publishing chat changes.",
         "publish_state": "internal_only",
         "evidence_chain": ["input message", "intent guard", "route detection", "language formatting", "supervisor judgment"],
-        "artifacts": ["dfds-customer-insights-logs/2026-07-21.md"],
+        "artifacts": ["mias-cruises-customer-insights-logs/2026-07-21.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-21"},
     },
     {
@@ -336,7 +336,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Require `app/index.html`, `app/app.js`, `app/data/update-log.mjs`, and the daily log to move together for frontend releases.",
         "publish_state": "internal_only",
         "evidence_chain": ["module change", "cache version", "Update Log entry", "daily log", "supervisor judgment"],
-        "artifacts": ["dfds-customer-insights-logs/2026-07-18.md", "dfds-customer-insights-logs/2026-07-21.md"],
+        "artifacts": ["mias-cruises-customer-insights-logs/2026-07-18.md", "mias-cruises-customer-insights-logs/2026-07-21.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-21"},
     },
 ]
@@ -521,7 +521,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Keep route controls limited to Overview, Customer Voice, and Recommendations.",
     publish_state: "verified",
     evidence_chain: ["input context", "UI route behavior", "supervisor judgment", "visibility decision"],
-    artifacts: ["dfds-customer-insights-logs/2026-07-16.md"]
+    artifacts: ["mias-cruises-customer-insights-logs/2026-07-16.md"]
   },
   {
     id: "seed-20260717-source-limitations",
@@ -535,7 +535,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Show collection method and limitation labels before using source evidence in recommendations.",
     publish_state: "internal_only",
     evidence_chain: ["collection attempt", "source limitation", "normalized source row", "supervisor judgment"],
-    artifacts: ["dfds-customer-insights-logs/2026-07-17.md"]
+    artifacts: ["mias-cruises-customer-insights-logs/2026-07-17.md"]
   },
   {
     id: "seed-20260720-rag-context",
@@ -549,7 +549,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Flag answers that cite irrelevant evidence or miss obvious visible dashboard evidence.",
     publish_state: "internal_only",
     evidence_chain: ["page context", "evidence_items", "project_memories", "chat history", "supervisor judgment"],
-    artifacts: ["outputs/dfds-rag-validation-set.xlsx", "dfds-customer-insights-logs/2026-07-20.md"]
+    artifacts: ["outputs/dfds-rag-validation-set.xlsx", "mias-cruises-customer-insights-logs/2026-07-20.md"]
   },
   {
     id: "seed-20260721-mia-weather-language",
@@ -563,7 +563,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Test weather, greeting, Chinese Dover-Calais, and Danish prompts before publishing chat changes.",
     publish_state: "internal_only",
     evidence_chain: ["input message", "intent guard", "route detection", "language formatting", "supervisor judgment"],
-    artifacts: ["dfds-customer-insights-logs/2026-07-21.md"]
+    artifacts: ["mias-cruises-customer-insights-logs/2026-07-21.md"]
   },
   {
     id: "seed-20260718-21-cache-release",
@@ -577,7 +577,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Require cache versions, Update Log, and daily logs to move together for frontend releases.",
     publish_state: "internal_only",
     evidence_chain: ["module change", "cache version", "Update Log entry", "daily log", "supervisor judgment"],
-    artifacts: ["dfds-customer-insights-logs/2026-07-18.md", "dfds-customer-insights-logs/2026-07-21.md"]
+    artifacts: ["mias-cruises-customer-insights-logs/2026-07-18.md", "mias-cruises-customer-insights-logs/2026-07-21.md"]
   }
 ];
 ```
@@ -1022,7 +1022,7 @@ Stop the server with `Ctrl-C` after verification.
 
 **Files:**
 - Modify: `app/data/update-log.mjs`
-- Modify: `dfds-customer-insights-logs/2026-07-21.md`
+- Modify: `mias-cruises-customer-insights-logs/2026-07-21.md`
 
 - [ ] **Step 1: Add Update Log entry**
 
@@ -1042,7 +1042,7 @@ Add this object at the top of `supervisorLogs` in `app/data/update-log.mjs`:
 
 - [ ] **Step 2: Add daily log entry**
 
-Append this section to `dfds-customer-insights-logs/2026-07-21.md`:
+Append this section to `mias-cruises-customer-insights-logs/2026-07-21.md`:
 
 ```markdown
 ## Internal Review Console Preparation

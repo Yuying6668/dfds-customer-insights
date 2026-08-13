@@ -450,4 +450,4 @@ Expected: all automated checks pass.
 
 Run: `PORT=8767 .venv/bin/python -u server.py`
 
-Expected: `DFDS dashboard: http://127.0.0.1:8767/`. Open `/it-data-flow`, drag all three fixture workbooks, select Upload batch, and confirm that the Cleaned Excel preview appears below the source workbook preview with non-zero cleaning statistics.
+Expected: `Mia's Cruises dashboard: http://127.0.0.1:8767/`. Open `/it-data-flow`, drag all three fixture workbooks, select Upload batch, and confirm that the Cleaned Excel preview appears below the source workbook preview with non-zero cleaning statistics.

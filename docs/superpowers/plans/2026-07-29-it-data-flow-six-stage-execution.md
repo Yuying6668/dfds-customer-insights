@@ -113,7 +113,7 @@ Expected: PASS.
 ### Task 4: Verify and Record
 
 **Files:**
-- Modify: `dfds-customer-insights-logs/2026-07-29.md`
+- Modify: `mias-cruises-customer-insights-logs/2026-07-29.md`
 
 - [ ] **Step 1: Run regression tests**
 

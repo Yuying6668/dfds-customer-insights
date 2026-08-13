@@ -1,11 +1,11 @@
-# DFDS Integrated RAG Platform Design
+# Mia's Cruises Integrated RAG Platform Design
 
 **Date:** 2026-07-28  
 **Status:** Proposed, user-approved architecture pending specification review
 
 ## Goal
 
-Deliver an end-to-end DFDS customer and market intelligence RAG demonstration while establishing a measurable retrieval foundation. The primary quality target is `Recall@5 >= 0.90` on a frozen held-out evaluation set. The platform must show the full path from data intake through cleansing, PostgreSQL storage, indexing, retrieval, reranking, cited LLM response, and evaluation.
+Deliver an end-to-end Mia's Cruises customer and market intelligence RAG demonstration while establishing a measurable retrieval foundation. The primary quality target is `Recall@5 >= 0.90` on a frozen held-out evaluation set. The platform must show the full path from data intake through cleansing, PostgreSQL storage, indexing, retrieval, reranking, cited LLM response, and evaluation.
 
 This design does not claim that public snapshots, synthetic records, or review-count snapshots are raw customer-review corpora.
 

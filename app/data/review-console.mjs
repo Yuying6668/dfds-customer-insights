@@ -11,7 +11,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Keep route controls limited to Overview, Customer Voice, and Recommendations.",
     publish_state: "verified",
     evidence_chain: ["input context", "UI route behavior", "supervisor judgment", "visibility decision"],
-    artifacts: ["dfds-customer-insights-logs/2026-07-16.md"]
+    artifacts: ["mias-cruises-customer-insights-logs/2026-07-16.md"]
   },
   {
     id: "seed-20260717-source-limitations",
@@ -25,7 +25,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Show collection method and limitation labels before using source evidence in recommendations.",
     publish_state: "internal_only",
     evidence_chain: ["collection attempt", "source limitation", "normalized source row", "supervisor judgment"],
-    artifacts: ["dfds-customer-insights-logs/2026-07-17.md"]
+    artifacts: ["mias-cruises-customer-insights-logs/2026-07-17.md"]
   },
   {
     id: "seed-20260720-rag-context",
@@ -39,7 +39,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Flag answers that cite irrelevant evidence or miss obvious visible dashboard evidence.",
     publish_state: "internal_only",
     evidence_chain: ["page context", "evidence_items", "project_memories", "chat history", "supervisor judgment"],
-    artifacts: ["outputs/dfds-rag-validation-set.xlsx", "dfds-customer-insights-logs/2026-07-20.md"]
+    artifacts: ["outputs/dfds-rag-validation-set.xlsx", "mias-cruises-customer-insights-logs/2026-07-20.md"]
   },
   {
     id: "seed-20260721-mia-weather-language",
@@ -53,7 +53,7 @@ export const reviewConsoleSeedItems = [
     recommendation: "Test weather, greeting, Chinese Dover-Calais, and Danish prompts before publishing chat changes.",
     publish_state: "internal_only",
     evidence_chain: ["input message", "intent guard", "route detection", "language formatting", "supervisor judgment"],
-    artifacts: ["dfds-customer-insights-logs/2026-07-21.md"]
+    artifacts: ["mias-cruises-customer-insights-logs/2026-07-21.md"]
   },
   {
     id: "seed-20260718-21-cache-release",
@@ -67,6 +67,6 @@ export const reviewConsoleSeedItems = [
     recommendation: "Require cache versions, Update Log, and daily logs to move together for frontend releases.",
     publish_state: "internal_only",
     evidence_chain: ["module change", "cache version", "Update Log entry", "daily log", "supervisor judgment"],
-    artifacts: ["dfds-customer-insights-logs/2026-07-18.md", "dfds-customer-insights-logs/2026-07-21.md"]
+    artifacts: ["mias-cruises-customer-insights-logs/2026-07-18.md", "mias-cruises-customer-insights-logs/2026-07-21.md"]
   }
 ];

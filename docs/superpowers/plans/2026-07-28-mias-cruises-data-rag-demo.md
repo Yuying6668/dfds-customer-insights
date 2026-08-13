@@ -1,8 +1,8 @@
-# DFDS Data RAG Demo Implementation Plan
+# Mia's Cruises Data RAG Demo Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build an interview-ready DFDS Data RAG demo that combines provenance-labelled evidence retrieval with constrained synthetic Passenger Profile analytics, while keeping all synthetic data visibly marked.
+**Goal:** Build an interview-ready Mia's Cruises Data RAG demo that combines provenance-labelled evidence retrieval with constrained synthetic Passenger Profile analytics, while keeping all synthetic data visibly marked.
 
 **Architecture:** Keep DeepSeek as the answer generator and add an OpenAI-compatible embedding boundary for semantic evidence retrieval. The backend will route each question to evidence retrieval, a parameterized Passenger Profile query, or both; all returned sources and metrics retain provenance. Evaluation data remains outside live retrieval and each evaluation run persists retrieval, route, provenance, and data-query results.
 
@@ -12,7 +12,7 @@
 
 ## Constraints To Preserve
 
-- The demo uses only public snapshots and synthetic data. Never present an imported record as a real DFDS customer, booking, CRM, or operational record.
+- The demo uses only public snapshots and synthetic data. Never present an imported record as a real Mia's Cruises customer, booking, CRM, or operational record.
 - `rag_evaluation_items` is evaluation input only. The live evidence retriever must never query it.
 - Keep `embedding vector(16)` for compatibility. New semantic ranking uses only `semantic_embedding vector(1536)` after re-indexing.
 - Do not call an embedding API when `RAG_EMBEDDING_API_KEY` is absent. The product must use keyword-only retrieval and set `retrieval.semanticAvailable` to `false`.
@@ -75,7 +75,7 @@ The `/api/chat` response keeps the existing keys and adds the following optional
 - Modify: `work/test_chat_widget_source.py` - assert data-query and synthetic-label rendering contract.
 - Modify: `.env.example` - document embedding configuration without a real key.
 - Modify: `docker-compose.yml` - pass optional embedding configuration into the app container.
-- Modify: `dfds-customer-insights-logs/2026-07-28.md` - record the implementation and verification result.
+- Modify: `mias-cruises-customer-insights-logs/2026-07-28.md` - record the implementation and verification result.
 
 ### Task 1: Add the Schema Contract Before Backend Code
 
@@ -743,7 +743,7 @@ Expected: `FAIL` because current response has no `dataQuery`, `retrieval`, or ca
 Extend `build_messages` to serialize `dataQuery` and `retrieval` and add these exact guardrails to the system prompt:
 
 ```text
-Passenger Profile values are synthetic interview-demo data, not real DFDS CRM, booking, or operational facts.
+Passenger Profile values are synthetic interview-demo data, not real Mia's Cruises CRM, booking, or operational facts.
 When a data query is supplied, state the result as Synthetic Passenger Profile and do not invent a metric that is absent from its rows.
 When semanticAvailable is false, do not claim a semantic match.
 ```
@@ -946,11 +946,11 @@ Expected: source tests report `OK` and Vite completes successfully.
 
 **Files:**
 - Create: `docs/dfds-data-rag-demo-runbook.md`
-- Modify: `dfds-customer-insights-logs/2026-07-28.md`
+- Modify: `mias-cruises-customer-insights-logs/2026-07-28.md`
 
 - [ ] **Step 1: Write a runbook that states the demo boundary before its commands.**
 
-The first paragraph must say that the demo uses `Synthetic Interview Review Corpus` and `Synthetic Passenger Profile`, plus public snapshots, and is not real DFDS customer or operational data. Include these exact command groups:
+The first paragraph must say that the demo uses `Synthetic Interview Review Corpus` and `Synthetic Passenger Profile`, plus public snapshots, and is not real Mia's Cruises customer or operational data. Include these exact command groups:
 
 ```bash
 docker compose up -d db
@@ -991,7 +991,7 @@ Expected: every Python module reports `OK` and the build succeeds.
 Open the local dashboard at `http://127.0.0.1:8767/`. Verify these three calls in desktop and a 390px-wide mobile viewport:
 
 1. Ask for evidence about Dover-Calais delay guidance and request sources. Confirm returned source cards show evidence ID, route, and `Synthetic` only for synthetic records.
-2. Ask which segment has the highest order value on Newcastle-IJmuiden. Confirm a compact `Synthetic Passenger Profile` query block appears with a table and no claim that it is real DFDS data.
+2. Ask which segment has the highest order value on Newcastle-IJmuiden. Confirm a compact `Synthetic Passenger Profile` query block appears with a table and no claim that it is real Mia's Cruises data.
 3. Ask why the high-value North Sea segment might need clearer route communication. Confirm the response can show both evidence and the structured query block.
 
 Confirm no horizontal text overlap, no console errors, no embedding API call when credentials are absent, and `retrieval.semanticAvailable` is `false` in the API response under keyword-only operation.

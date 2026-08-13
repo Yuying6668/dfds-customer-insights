@@ -248,7 +248,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Keep route controls limited to Overview, Customer Voice, and Recommendations.",
         "publish_state": "verified",
         "evidence_chain": ["input context", "UI route behavior", "supervisor judgment", "visibility decision"],
-        "artifacts": ["dfds-customer-insights-logs/2026-07-16.md"],
+        "artifacts": ["mias-cruises-customer-insights-logs/2026-07-16.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-16"},
     },
     {
@@ -265,7 +265,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Show collection method and limitation labels before using source evidence in recommendations.",
         "publish_state": "internal_only",
         "evidence_chain": ["collection attempt", "source limitation", "normalized source row", "supervisor judgment"],
-        "artifacts": ["dfds-customer-insights-logs/2026-07-17.md"],
+        "artifacts": ["mias-cruises-customer-insights-logs/2026-07-17.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-17"},
     },
     {
@@ -282,7 +282,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Flag answers that cite irrelevant evidence or miss obvious visible dashboard evidence.",
         "publish_state": "internal_only",
         "evidence_chain": ["page context", "evidence_items", "project_memories", "chat history", "supervisor judgment"],
-        "artifacts": ["outputs/dfds-rag-validation-set.xlsx", "dfds-customer-insights-logs/2026-07-20.md"],
+        "artifacts": ["outputs/dfds-rag-validation-set.xlsx", "mias-cruises-customer-insights-logs/2026-07-20.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-20"},
     },
     {
@@ -299,7 +299,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Test weather, greeting, Chinese Dover-Calais, and Danish prompts before publishing chat changes.",
         "publish_state": "internal_only",
         "evidence_chain": ["input message", "intent guard", "route detection", "language formatting", "supervisor judgment"],
-        "artifacts": ["dfds-customer-insights-logs/2026-07-21.md"],
+        "artifacts": ["mias-cruises-customer-insights-logs/2026-07-21.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-21"},
     },
     {
@@ -316,7 +316,7 @@ REVIEW_CONSOLE_SEED_ITEMS = [
         "recommendation": "Require app/index.html, app/app.js, app/data/update-log.mjs, and the daily log to move together for frontend releases.",
         "publish_state": "internal_only",
         "evidence_chain": ["module change", "cache version", "Update Log entry", "daily log", "supervisor judgment"],
-        "artifacts": ["dfds-customer-insights-logs/2026-07-18.md", "dfds-customer-insights-logs/2026-07-21.md"],
+        "artifacts": ["mias-cruises-customer-insights-logs/2026-07-18.md", "mias-cruises-customer-insights-logs/2026-07-21.md"],
         "metadata": {"seeded_from_log": True, "log_date": "2026-07-21"},
     },
 ]
@@ -4829,7 +4829,7 @@ def main():
         # Render and other container platforms probe the public container interface.
         host = os.environ.get("HOST", "0.0.0.0")
         server = ThreadingHTTPServer((host, port), Handler)
-        print(f"DFDS dashboard listening on {host}:{port}")
+        print(f"Mia's Cruises dashboard listening on {host}:{port}")
         print(f"Database-backed Evidence Knowledge Base: {'ready' if database_ready else 'not connected'}")
         print("Set DEEPSEEK_API_KEY in .env or the shell for live LLM answers.")
         server.serve_forever()

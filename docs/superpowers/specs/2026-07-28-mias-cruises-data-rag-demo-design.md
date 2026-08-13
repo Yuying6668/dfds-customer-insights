@@ -1,11 +1,11 @@
-# DFDS Data RAG Demo Design
+# Mia's Cruises Data RAG Demo Design
 
 ## Goal
 
-Build a demonstrable DFDS Passenger Ferry Customer Intelligence Data RAG using
+Build a demonstrable Mia's Cruises Passenger Ferry Customer Intelligence Data RAG using
 only clearly labeled public snapshots and synthetic data. The demo must show
 the distinction between evidence retrieval and structured-data analysis during
-an interview without claiming access to real DFDS customer or operational data.
+an interview without claiming access to real Mia's Cruises customer or operational data.
 
 ## Scope
 
@@ -76,7 +76,7 @@ them visibly.
 ## Synthetic Review Corpus
 
 The demo creates a bounded, deterministic review corpus derived from the
-existing DFDS themes, routes, app issues, and competitor context. Each review
+existing Mia's Cruises themes, routes, app issues, and competitor context. Each review
 has a stable `external_review_id`, route, language, rating, publication date,
 and source version. The source name is `Synthetic Interview Review Corpus`.
 

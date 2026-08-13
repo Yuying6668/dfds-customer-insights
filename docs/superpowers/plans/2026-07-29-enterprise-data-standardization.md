@@ -115,7 +115,7 @@ Expected: PASS.
 def test_reference_normalizers_emit_canonical_values(self):
     self.assertEqual(standardization.country_code("Denmark"), "DK")
     self.assertEqual(standardization.language_code("ENG"), "en")
-    self.assertEqual(standardization.booking_channel("DFDS App"), "Mobile App")
+    self.assertEqual(standardization.booking_channel("Mia's Cruises App"), "Mobile App")
     self.assertEqual(standardization.rating_5("8/10"), 4.0)
     self.assertEqual(standardization.parse_datetime("29/07/2026"), "2026-07-29T00:00:00Z")
 ```

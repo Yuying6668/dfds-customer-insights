@@ -1,8 +1,8 @@
-# DFDS/MIA Integration Implementation Plan
+# Mia's Cruises/MIA Integration Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Consolidate the DFDS/MIA customer-insights application and its survey/RAG implementation into one readable, reproducible Git repository.
+**Goal:** Consolidate the Mia's Cruises/MIA customer-insights application and its survey/RAG implementation into one readable, reproducible Git repository.
 
 **Architecture:** Keep the existing full-stack application as the canonical runtime. Move the independent survey/RAG pipeline under `backend/survey_pipeline/`, its reusable scripts under `scripts/`, and its tests under `tests/survey_pipeline/`. Preserve MIA-specific design material in `docs/` and keep generated exports and local credentials out of version control.
 

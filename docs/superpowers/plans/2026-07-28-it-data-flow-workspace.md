@@ -17,7 +17,7 @@
 - Modify: `app/routes/ITDataFlowRoute.jsx` - batch-first UI composition and disclosure interactions.
 - Modify: `app/styles.css` - workspace layout, lifecycle strip, Mia brief, and responsive rules.
 - Modify: `app/data/update-log.mjs` - user-facing product change entry.
-- Modify: `dfds-customer-insights-logs/2026-07-28.md` - daily implementation and validation record.
+- Modify: `mias-cruises-customer-insights-logs/2026-07-28.md` - daily implementation and validation record.
 - Modify: `app/dist/*` - Vite production output.
 
 ### Task 1: Test and Implement Batch State Helpers
@@ -63,7 +63,7 @@
 
 **Files:**
 - Modify: `app/data/update-log.mjs`
-- Modify: `dfds-customer-insights-logs/2026-07-28.md`
+- Modify: `mias-cruises-customer-insights-logs/2026-07-28.md`
 - Modify: `app/dist/*`
 
 - [ ] Add an Update Log entry explaining the batch-first workspace redesign.

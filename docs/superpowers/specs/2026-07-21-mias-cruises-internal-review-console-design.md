@@ -1,10 +1,10 @@
-# DFDS Internal Review Console Design
+# Mia's Cruises Internal Review Console Design
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this spec task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add an internal review console that lets the team inspect validation/reflection agent results, see the evidence chain behind each judgment, and decide whether a result is ready to surface in the public DFDS dashboard.
+**Goal:** Add an internal review console that lets the team inspect validation/reflection agent results, see the evidence chain behind each judgment, and decide whether a result is ready to surface in the public Mia's Cruises dashboard.
 
-**Architecture:** Keep the existing DFDS dashboard and Update Log intact. Add a separate internal review page that reads structured review records from the backend, shows queue + detail + evidence chain in one place, and exposes a small publish/visibility state that can flow back into the dashboard as badges. The console should treat review output as first-class data, not loose notes.
+**Architecture:** Keep the existing Mia's Cruises dashboard and Update Log intact. Add a separate internal review page that reads structured review records from the backend, shows queue + detail + evidence chain in one place, and exposes a small publish/visibility state that can flow back into the dashboard as badges. The console should treat review output as first-class data, not loose notes.
 
 **Tech Stack:** Static HTML/JS dashboard, existing frontend module pattern, PostgreSQL, existing evidence and keyword tables, existing chat/reporting backend.
 
@@ -35,11 +35,11 @@ It is not meant to replace the public dashboard. It is the control room behind i
 ## Log Coverage Audit
 
 This design is based on the project logs from:
-- `dfds-customer-insights-logs/2026-07-16.md`
-- `dfds-customer-insights-logs/2026-07-17.md`
-- `dfds-customer-insights-logs/2026-07-18.md`
-- `dfds-customer-insights-logs/2026-07-20.md`
-- `dfds-customer-insights-logs/2026-07-21.md`
+- `mias-cruises-customer-insights-logs/2026-07-16.md`
+- `mias-cruises-customer-insights-logs/2026-07-17.md`
+- `mias-cruises-customer-insights-logs/2026-07-18.md`
+- `mias-cruises-customer-insights-logs/2026-07-20.md`
+- `mias-cruises-customer-insights-logs/2026-07-21.md`
 
 Those logs show that the review console must supervise more than final AI answers. It must cover:
 - dashboard scope and route-filter behavior from July 16
@@ -48,7 +48,7 @@ Those logs show that the review console must supervise more than final AI answer
 - PostgreSQL + pgvector, DeepSeek proxy, Memory RAG, RAG validation workbook, and frontend module split from July 20
 - Mia small-talk/weather guard, multilingual evidence summaries, message-level route detection, and Quick read copy changes from July 21
 
-The console should therefore act as a multi-layer harness for the whole DFDS evidence pipeline, not only as a review page for generated recommendations.
+The console should therefore act as a multi-layer harness for the whole Mia's Cruises evidence pipeline, not only as a review page for generated recommendations.
 
 ## Required Review Layers
 
@@ -68,7 +68,7 @@ Reviews whether the dashboard still respects core product boundaries:
 Reviews whether public evidence is collected and described honestly:
 - Trustpilot scores and review counts
 - Google Play and Apple App Store ratings and review text
-- Google Reviews as location-level signals, not one DFDS brand score
+- Google Reviews as location-level signals, not one Mia's Cruises brand score
 - Reddit as discussion signals, not formal reviews
 - Firecrawl search-result snapshots as directional evidence, not full scrape output
 - blocked or verification-screen sources such as Trustpilot and Reddit

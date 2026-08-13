@@ -1,4 +1,4 @@
-# DFDS Memory Ledger RAG Design
+# Mia's Cruises Memory Ledger RAG Design
 
 ## Goal
 
@@ -39,7 +39,7 @@ Four visibility scopes are supported:
 | Scope | Owner | Example | Visibility |
 | --- | --- | --- | --- |
 | `platform` | system | Mia answer safety policy | authorized platform users |
-| `project` | DFDS workspace | reviewed DFDS data constraint | authorized project members |
+| `project` | Mia's Cruises workspace | reviewed Mia's Cruises data constraint | authorized project members |
 | `user` | one actor | language preference or approved personal default | that actor only |
 | `conversation` | one actor and conversation | current discussion, route focus, correction | that conversation only |
 

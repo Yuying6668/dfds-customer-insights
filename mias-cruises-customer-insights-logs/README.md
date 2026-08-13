@@ -1,6 +1,6 @@
-# DFDS Customer Insights Daily Logs
+# Mia's Cruises Customer Insights Daily Logs
 
-这个文件夹替代原来的 `HANDOFF.md`，用于按日期保存 DFDS Customer Intelligence Platform 的项目日志。
+这个文件夹替代原来的 `HANDOFF.md`，用于按日期保存 Mia's Cruises Customer Intelligence Platform 的项目日志。
 
 主项目文件夹是：
 
@@ -8,7 +8,7 @@
 
 ## 项目总览
 
-项目是一个面向 DFDS passenger ferry 场景的 Customer Intelligence / Voice of Customer 平台原型。它帮助 Marketing、CX 和 Customer Insights stakeholder 从公开客户反馈中理解品牌口碑、路线问题、App 体验、竞品表现和可执行的营销建议。
+项目是一个面向 Mia's Cruises passenger ferry 场景的 Customer Intelligence / Voice of Customer 平台原型。它帮助 Marketing、CX 和 Customer Insights stakeholder 从公开客户反馈中理解品牌口碑、路线问题、App 体验、竞品表现和可执行的营销建议。
 
 当前范围只覆盖 passenger ferry customer signals。Freight 和 logistics 不在本阶段范围内。
 
@@ -17,7 +17,7 @@
 - 前端 dashboard：Overview、Customer Voice、App Reviews、Competitors、Recommendations、Survey CSV、Update Log、Data Basis、IT Data Flow。
 - 公开数据快照：Trustpilot、Google Play、Apple App Store、Google Reviews、Reddit、未来 Survey CSV 占位。
 - 路线视角：All signals、Dover-Calais、Newhaven-Dieppe、Newcastle-IJmuiden、Jersey。
-- 竞品对标：DFDS 加 11 家 passenger ferry 竞品或区域对标品牌。
+- 竞品对标：Mia's Cruises 加 11 家 passenger ferry 竞品或区域对标品牌。
 - Chat assistant：从本页上下文、公开证据、PostgreSQL + pgvector Evidence Knowledge Base、项目记忆和短期对话历史中检索，再调用 DeepSeek 生成回答。
 - 验证体系：100 条平台 QA 用于产品复盘；50 条 RAG validation set 用于人工评分和 RAG 调优；内部 Review Console 和 validation harness 用于监督 agent 输出。
 

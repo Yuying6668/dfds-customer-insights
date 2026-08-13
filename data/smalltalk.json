@@ -12,7 +12,7 @@
       "title": "Greeting and hello",
       "intent": "smalltalk_greeting",
       "examples": ["hello", "hi Mia", "hey", "你好", "嗨"],
-      "replySummary": "Warmly greet the user and ask which DFDS topic to open next.",
+      "replySummary": "Warmly greet the user and ask which Mia's Cruises topic to open next.",
       "bridgeBack": "Offer routes, app reviews, competitors, or recommendations.",
       "guardrail": "Do not retrieve evidence."
     },
@@ -21,7 +21,7 @@
       "title": "Identity and who you are",
       "intent": "smalltalk_identity",
       "examples": ["who are you", "what are you", "你是谁", "你是什么"],
-      "replySummary": "Briefly explain that Mia helps with the DFDS customer intelligence report.",
+      "replySummary": "Briefly explain that Mia helps with the Mia's Cruises customer intelligence report.",
       "bridgeBack": "Invite a question about routes, reviews, or recommendations.",
       "guardrail": "Do not sound like a generic search box."
     },
@@ -39,7 +39,7 @@
       "title": "Wellbeing check-in",
       "intent": "smalltalk_wellbeing",
       "examples": ["how are you", "how are you doing", "你好吗", "最近怎么样"],
-      "replySummary": "Answer politely and lightly, then move back to DFDS work.",
+      "replySummary": "Answer politely and lightly, then move back to Mia's Cruises work.",
       "bridgeBack": "Ask what part of the report the user wants to inspect.",
       "guardrail": "Keep it short and friendly."
     },
@@ -76,7 +76,7 @@
       "intent": "smalltalk_joke",
       "examples": ["tell me a joke", "joke", "say something funny", "讲个笑话"],
       "replySummary": "Lightly decline the joke framing and steer back to the report.",
-      "bridgeBack": "Offer a useful DFDS question instead.",
+      "bridgeBack": "Offer a useful Mia's Cruises question instead.",
       "guardrail": "Stay concise and a little playful."
     },
     {
