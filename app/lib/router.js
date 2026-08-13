@@ -24,7 +24,7 @@ export const routeFocusOptions = [
 ];
 
 export function normalizePath(pathname) {
-  if (!pathname || pathname === "/") return "/it-data-flow";
+  if (!pathname || pathname === "/") return "/";
   return routeConfig.some((route) => route.path === pathname) ? pathname : "/overview";
 }
 
@@ -71,10 +71,6 @@ export function useLocationState(React) {
   const [pathname, setPathname] = useState(normalizePath(window.location.pathname));
 
   useEffect(() => {
-    if (!window.location.pathname || window.location.pathname === "/") {
-      window.history.replaceState({}, "", normalizedPathWithSearch(window.location.pathname, window.location.search));
-    }
-
     const onChange = () => setPathname(normalizePath(window.location.pathname));
     window.addEventListener("popstate", onChange);
     window.addEventListener("dfds:navigate", onChange);

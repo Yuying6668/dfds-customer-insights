@@ -75,7 +75,7 @@ function LoginPage() {
 }
 
 export function App() {
-  const isLoginPage = window.location.pathname === "/login";
+  const isLoginPage = window.location.pathname === "/" || window.location.pathname === "/login";
   const pathname = useLocationState(React);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [routeFocus, setRouteFocus] = useRouteFocus();

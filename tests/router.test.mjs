@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { navigate, normalizePath, normalizedPathWithSearch } from "../app/lib/router.js";
 
-test("opens IT Data Flow from the root route", () => {
-  assert.equal(normalizePath("/"), "/it-data-flow");
+test("keeps the branded workspace entry at the root route", () => {
+  assert.equal(normalizePath("/"), "/");
 });
 
 test("keeps the Overview route available", () => {
@@ -32,6 +32,6 @@ test("keeps the selected dataset when navigating between insight pages", () => {
   }
 });
 
-test("keeps the selected dataset when normalizing the root route", () => {
-  assert.equal(normalizedPathWithSearch("/", "?datasetRun=batch-1"), "/it-data-flow?datasetRun=batch-1");
+test("keeps the selected dataset query at the root route", () => {
+  assert.equal(normalizedPathWithSearch("/", "?datasetRun=batch-1"), "/?datasetRun=batch-1");
 });
