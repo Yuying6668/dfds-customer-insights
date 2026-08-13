@@ -94,6 +94,13 @@ def _normalise_cell(value):
     return str(value).strip()
 
 
+def _looks_like_field_header(row):
+    values = [str(value or "").strip().casefold() for value in row]
+    known_fields = {"response_id", "rating", "overall_satisfaction", "route_region", "route_corridor", "age_band", "residence_region", "nps_band"}
+    non_empty = [value for value in values if value]
+    return len(non_empty) >= 2 and (len(set(non_empty)) == len(non_empty)) and sum(value in known_fields or re.fullmatch(r"[a-z][a-z0-9_]*", value) is not None for value in non_empty) >= max(2, len(non_empty) // 2)
+
+
 def _standardize_route(value):
     compact = re.sub(r"[^a-z]", "", str(value).casefold())
     if compact in ROUTE_ALIASES:
@@ -238,6 +245,24 @@ def clean_sheet_rows(rows: Iterable[Iterable[object]], preview_row_limit=PREVIEW
     """Return stable cleaned columns and a masked, limited preview without altering source files."""
     row_iterator = iter(rows)
     header_values = next(row_iterator, ())
+    original_header_values = header_values
+    buffered_rows = None
+    if not _looks_like_field_header(header_values):
+        scanned_rows = []
+        found_header = False
+        for candidate in row_iterator:
+            if _looks_like_field_header(candidate):
+                header_values = candidate
+                found_header = True
+                break
+            scanned_rows.append(candidate)
+        if found_header:
+            buffered_rows = list(row_iterator)
+        else:
+            header_values = original_header_values
+            buffered_rows = scanned_rows
+    if buffered_rows is not None:
+        row_iterator = iter(buffered_rows)
     if header_values is None:
         header_values = ()
 
@@ -286,7 +311,8 @@ def clean_sheet_rows(rows: Iterable[Iterable[object]], preview_row_limit=PREVIEW
 
     for raw_values in row_iterator:
         received_rows += 1
-        values = list(raw_values or ())[: len(columns)]
+        source_values = list(raw_values or ())[: len(columns)]
+        values = source_values[:]
         values.extend([None] * (len(columns) - len(values)))
         row = {column: _normalise_cell(value) for column, value in zip(columns, values)}
 
@@ -294,7 +320,7 @@ def clean_sheet_rows(rows: Iterable[Iterable[object]], preview_row_limit=PREVIEW
             blank_rows_removed += 1
             continue
 
-        missing_values_standardized += sum(_is_missing_value(value) for value in values)
+        missing_values_standardized += sum(_is_missing_value(value) for value in source_values)
         row_mapped_values, row_mapping_exceptions, row_checks, row_exception_details = _standardize_row(row)
         if row.get("timezone") and "timezone" not in columns:
             columns.append("timezone")
@@ -635,7 +661,7 @@ def export_cleaned_batch(storage_root, batch_id, export_format, file_id=None):
         workbook.save(output)
         workbook.close()
         source_name = Path(sheets[0]["fileName"]).stem if sheets else "upload"
-        return output.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", f"standardised_{source_name}_{version}.xlsx"
+        return output.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", f"cleaned_{version}.xlsx"
     if export_format == "csv":
         output = io.StringIO(newline="")
         writer = csv.writer(output)

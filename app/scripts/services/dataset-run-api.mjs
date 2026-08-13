@@ -1,10 +1,21 @@
 import { getAccessToken } from "../../lib/auth.js";
 
-export async function publishDatasetRun(batchId) {
-  const response = await fetch(`/api/upload-batches/${encodeURIComponent(batchId)}/publish`, { method: "POST", headers: { Authorization: `Bearer ${getAccessToken()}` } });
+async function datasetRunRequest(url, { accessToken = getAccessToken(), fetchImpl = fetch } = {}) {
+  const response = await fetchImpl(url, { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } });
   const payload = await response.json();
-  if (!response.ok) throw new Error(payload.error || "Dataset could not be published");
+  if (!response.ok) throw new Error(payload.error || "Dataset could not be updated");
   return payload;
+}
+
+export async function activateDatasetRun(batchId, options = {}) {
+  const encodedBatchId = encodeURIComponent(batchId);
+  const batch = await datasetRunRequest(`/api/upload-batches/${encodedBatchId}/save-cleaned`, options);
+  const published = await datasetRunRequest(`/api/upload-batches/${encodedBatchId}/publish`, options);
+  return { batch: batch.batch, run: published.run, analysisState: published.analysisState };
+}
+
+export async function publishDatasetRun(batchId) {
+  return datasetRunRequest(`/api/upload-batches/${encodeURIComponent(batchId)}/publish`);
 }
 
 export async function getDatasetRunAnalytics(batchId) {

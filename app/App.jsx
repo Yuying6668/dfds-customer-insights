@@ -20,6 +20,8 @@ import { ITDataFlowRoute } from "./routes/ITDataFlowRoute.jsx";
 import { ReviewConsoleRoute } from "./routes/ReviewConsoleRoute.jsx";
 import { AgentControlRoute } from "./routes/AgentControlRoute.jsx";
 import { listDatasetRuns } from "./scripts/services/dataset-run-api.mjs";
+import { datasetRunNavigationSnapshot, getInsightNavigationState } from "./lib/dataset-insight-routing.mjs";
+import { useDatasetNavigation } from "./hooks/use-dataset-navigation.mjs";
 
 const routeMap = {
   "agent-control": AgentControlRoute,
@@ -75,6 +77,7 @@ function LoginPage() {
 export function App() {
   const isLoginPage = window.location.pathname === "/login";
   const pathname = useLocationState(React);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [routeFocus, setRouteFocus] = useRouteFocus();
   const [uploadSession, setUploadSession] = useState(() => loadUploadSession());
   const [datasetRuns, setDatasetRuns] = useState([]);
@@ -89,6 +92,16 @@ export function App() {
     return next;
   });
   const RouteComponent = routeMap[activeView] || OverviewRoute;
+  const activeDatasetRunSummary = datasetRuns.find((run) => run.batchId === activeDatasetRun);
+  const initialDatasetNavigation = datasetRunNavigationSnapshot(activeDatasetRunSummary);
+  const liveInsightNavigation = useDatasetNavigation(activeDatasetRun, initialDatasetNavigation);
+  const insightNavigation = Object.fromEntries(Object.keys(liveInsightNavigation).map((route) => [
+    route,
+    liveInsightNavigation[route] || getInsightNavigationState(route, {
+      activeDatasetRun,
+      analytics: initialDatasetNavigation
+    })
+  ]));
   const routeLabel = getRouteLabel(activePath);
   const summary = getRouteAwareSummary(activePath);
   const exportText = useMemo(
@@ -112,7 +125,7 @@ export function App() {
 
   useEffect(() => {
     if (window.location.pathname !== activePath) {
-      window.history.replaceState({}, "", activePath);
+      window.history.replaceState({}, "", `${activePath}${window.location.search}`);
     }
   }, [activePath]);
 
@@ -120,7 +133,23 @@ export function App() {
     getAccessToken();
   }, []);
 
-  useEffect(() => { listDatasetRuns().then(setDatasetRuns).catch(() => setDatasetRuns([])); }, []);
+  useEffect(() => {
+    const syncDatasetRun = () => setActiveDatasetRun(new URLSearchParams(window.location.search).get("datasetRun") || "public");
+    window.addEventListener("popstate", syncDatasetRun);
+    window.addEventListener("dfds:navigate", syncDatasetRun);
+    return () => {
+      window.removeEventListener("popstate", syncDatasetRun);
+      window.removeEventListener("dfds:navigate", syncDatasetRun);
+    };
+  }, []);
+
+  const refreshDatasetRuns = () => listDatasetRuns().then(setDatasetRuns).catch(() => setDatasetRuns([]));
+
+  useEffect(() => {
+    refreshDatasetRuns();
+    window.addEventListener("dfds:dataset-published", refreshDatasetRuns);
+    return () => window.removeEventListener("dfds:dataset-published", refreshDatasetRuns);
+  }, []);
 
   const selectDatasetRun = (value) => {
     setActiveDatasetRun(value);
@@ -166,9 +195,10 @@ export function App() {
   const showDatasetSelector = ["/overview", "/recommendations", "/customer-voice", "/app-reviews", "/passenger-profile", "/competitors"].includes(activePath);
 
   return (
-    <div className="shell">
+    <div className={`shell${isSidebarCollapsed ? " sidebar-collapsed" : ""}`}>
       <aside className="sidebar" aria-label="Product navigation">
-        <div className="brand">
+        <div className="sidebar-header">
+          <div className="brand">
           <svg className="brand-mark" viewBox="0 0 48 48" role="img" aria-label="Mia's Cruises logo">
             <rect width="48" height="48" rx="8" fill="#063556" />
             <path d="M13 28.5 24 13l11 15.5H13Z" fill="#fff" />
@@ -179,13 +209,28 @@ export function App() {
             <p className="eyebrow">Voice of Customer</p>
             <h1>Mia's Cruises</h1>
           </div>
+          </div>
+          <button
+            className="sidebar-toggle"
+            type="button"
+            onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+            aria-expanded={!isSidebarCollapsed}
+            aria-label={isSidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
+            title={isSidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m14 6-6 6 6 6" />
+            </svg>
+          </button>
         </div>
 
         <nav className="nav">
           {navigationGroups.map((group) => (
             <details className="nav-group" key={group} open={routeConfig.some((item) => item.group === group && item.path === activePath)}>
               <summary className="nav-group-label">{group}</summary>
-              {routeConfig.filter((item) => item.group === group && !item.hidden).map((item) => (
+              {routeConfig.filter((item) => item.group === group && !item.hidden).map((item) => {
+                const insightStatus = group === "Data Insights" ? insightNavigation[item.view] : null;
+                return (
                 <a
                   key={item.path}
                   className={`nav-item${activePath === item.path ? " active" : ""}`}
@@ -196,8 +241,10 @@ export function App() {
                   }}
                 >
                   {item.label}
+                  {insightStatus ? <span className={`nav-update-status ${insightStatus.status}`} title={`${insightStatus.label} from Data Intake`} aria-label={`${insightStatus.label} from Data Intake`}><i aria-hidden="true" />{insightStatus.version}</span> : null}
                 </a>
-              ))}
+                );
+              })}
             </details>
           ))}
         </nav>
@@ -252,6 +299,11 @@ export function App() {
           setRouteFocus={setRouteFocus}
           pathname={activePath}
           onUploadedBatchChange={setUploadedBatch(activeView)}
+          onDatasetPublished={(batchId) => {
+            refreshDatasetRuns();
+            selectDatasetRun(batchId);
+            navigate(`/customer-voice?datasetRun=${encodeURIComponent(batchId)}`);
+          }}
           uploadSession={uploadSession}
           initialUploadedBatch={uploadSession[activeView] || null}
           activeDatasetRun={activeDatasetRun}

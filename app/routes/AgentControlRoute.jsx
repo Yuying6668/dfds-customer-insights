@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { DataTable, MetricCard, Panel } from "../components/common.jsx";
 import { getAccessToken } from "../lib/auth.js";
+import { agentHandoffMotion, monitoringMotion } from "../lib/agent-monitoring-motion.mjs";
 
 function formatNumber(value) {
   return new Intl.NumberFormat("en-GB").format(Number(value || 0));
@@ -9,6 +10,67 @@ function formatNumber(value) {
 function formatTimestamp(value) {
   if (!value) return "No activity";
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function AgentDataFlow({ observability }) {
+  const requests = Number(observability?.tokens?.requests || 0);
+  const totalTokens = Number(observability?.tokens?.total || 0);
+  const ragRecords = (observability?.layers || []).reduce((sum, layer) => sum + Number(layer.records || 0), 0);
+  const demoEvents = Number(observability?.demo?.events || 0);
+  const routeCount = Number(observability?.routeMonitoring?.length || 0);
+  const flowMotion = monitoringMotion({ requests: demoEvents || requests, avg_latency_ms: 190, records: ragRecords });
+  const nodes = [
+    { key: "users", label: "Real users", detail: "Questions · feedback · tasks", state: "active" },
+    { key: "gateway", label: "Data gateway", detail: "Masking · route detection", state: "secure" },
+    { key: "retrieval", label: "RAG retrieval", detail: "Keyword · semantic · rerank", state: "retrieving" },
+    { key: "agent", label: "Mia Agent", detail: "Answer · citations · review", state: "thinking" },
+    { key: "routes", label: "Route monitoring", detail: `${routeCount} routes · ${formatNumber(demoEvents)} events`, state: "streaming" }
+  ];
+  return <div className="agent-flow" aria-label="Agent data transmission flow" style={{ "--flow-seconds": `${flowMotion.packetSeconds}s`, "--rag-seconds": `${flowMotion.ragSeconds}s`, "--agent-load": `${Math.min(1, totalTokens / 150000)}` }}>
+    <div className="agent-flow-track" aria-hidden="true"><span /><span /><span /><span /></div>
+    {nodes.map((node, index) => <div className="agent-flow-node" key={node.key}>
+      <div className={`agent-flow-icon ${node.state}`}><span>{String(index + 1).padStart(2, "0")}</span><i /></div>
+      <strong>{node.label}</strong>
+      <small>{node.detail}</small>
+      <em>{node.state === "retrieving" ? "retrieving" : node.state === "thinking" ? "reasoning" : "connected"}</em>
+    </div>)}
+    <div className="agent-rag-lane" aria-label="RAG retrieval stages">
+      <span className="agent-rag-label">RAG trace</span>
+      <span className="agent-rag-step"><i />Keyword</span><b /><span className="agent-rag-step"><i />Semantic</span><b /><span className="agent-rag-step"><i />Rerank</span>
+    </div>
+  </div>;
+}
+
+function ConnectionMonitor({ routes }) {
+  return <div className="connection-monitor" aria-label="Route connection monitor">
+    {routes.map((route, index) => {
+      const latency = Number(route.avg_latency_ms || 0);
+      const motion = monitoringMotion(route);
+      const tone = motion.tone;
+      return <article className={`connection-card ${tone}`} key={route.route_key} style={{ "--connection-delay": `${index * 0.38}s`, "--packet-count": motion.packets, "--packet-seconds": `${motion.packetSeconds}s`, "--rag-seconds": `${motion.ragSeconds}s` }}>
+        <div className="connection-card-heading"><span className="connection-status"><i />{tone === "warn" ? "Elevated" : "Healthy"}</span><strong>{route.route_name}</strong></div>
+        <div className="connection-line">{Array.from({ length: motion.packets }, (_, packet) => <span className={`connection-packet packet-${packet + 1}`} key={packet} />)}</div>
+        <div className="connection-card-meta"><span>{latency.toFixed(1)} ms avg</span><span>{formatNumber(route.requests)} events</span></div>
+      </article>;
+    })}
+  </div>;
+}
+
+function AgentHandoffMonitor({ observability, routes }) {
+  const motion = agentHandoffMotion({
+    requests: observability?.demo?.events || observability?.tokens?.requests,
+    totalTokens: observability?.tokens?.total,
+    routeCount: routes.length
+  });
+  const agents = ["Mia Agent", "Route Agent", "Review Agent", "Operations Agent"];
+  return <div className="agent-handoff" aria-label="Agent to agent monitoring flow" style={{ "--handoff-seconds": `${motion.handoffSeconds}s`, "--agent-pulse-seconds": `${motion.agentPulseSeconds}s` }}>
+    <div className="agent-handoff-header"><span>Agent-to-Agent monitoring</span><strong>{formatNumber(observability?.demo?.events || observability?.tokens?.requests)} routed handoffs</strong></div>
+    <div className="agent-handoff-network">
+      <div className="agent-handoff-forward">{Array.from({ length: motion.forwardPackets }, (_, index) => <i key={`forward-${index}`} style={{ "--handoff-delay": `${index * motion.handoffSeconds / motion.forwardPackets}s` }} />)}</div>
+      <div className="agent-handoff-return">{Array.from({ length: motion.returnPackets }, (_, index) => <i key={`return-${index}`} style={{ "--handoff-delay": `${index * motion.handoffSeconds / motion.returnPackets + .3}s` }} />)}</div>
+      {agents.map((agent, index) => <article className="agent-handoff-node" key={agent}><span>{String(index + 1).padStart(2, "0")}</span><strong>{agent}</strong><small>{index === 0 ? "orchestrates" : index === 1 ? "route context" : index === 2 ? "policy check" : "operational output"}</small></article>)}
+    </div>
+  </div>;
 }
 
 export function AgentControlRoute() {
@@ -76,8 +138,13 @@ export function AgentControlRoute() {
   return <section className="agent-control">
     <header className="agent-control-header">
       <div><p className="eyebrow">Administrator workspace</p><h2>Agent Control</h2><p>Live monitoring for retrieval activity, model usage, and recent operator conversations.</p></div>
-      <a className="agent-control-exit" href="/it-data-flow">Open project workspace</a>
+      <div className="agent-control-header-actions"><span className="agent-live-indicator"><i />Live demo stream</span><a className="agent-control-exit" href="/it-data-flow">Open project workspace</a></div>
     </header>
+
+    <Panel title="Agent data transmission" eyebrow="Live simulation" pill="Streaming">
+      <AgentDataFlow observability={observability} />
+      <AgentHandoffMonitor observability={observability} routes={routeMonitoring} />
+    </Panel>
 
     <div className="agent-control-metrics" aria-label="24-hour monitoring summary">
       <MetricCard label="Requests (24h)" value={formatNumber(tokens.requests)} detail={`${formatNumber(observability?.demo?.events)} demo route events included`} />
@@ -86,7 +153,8 @@ export function AgentControlRoute() {
     </div>
 
     <div className="agent-control-grid">
-      <Panel title="Route monitoring" eyebrow="Simulated agent activity" pill="4 routes · 150 events">
+      <Panel title="Route monitoring" eyebrow="Simulated agent activity" pill={`${routeMonitoring.length} routes · ${formatNumber(observability?.demo?.events)} events`}>
+        <ConnectionMonitor routes={routeMonitoring} />
         <DataTable columns={["route_name", "requests", "total_tokens", "avg_latency_ms", "records", "last_seen_at"]} rows={routeMonitoring.map((route) => ({
           route_name: route.route_name,
           requests: formatNumber(route.requests),

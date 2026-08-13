@@ -15,7 +15,8 @@ RESTRICTED_FIELD = re.compile(r"email|customer|account|device|loyalty|alias|free
 
 # This registry is intentionally small. Unknown fields never become analytics inputs.
 SEMANTIC_MAPPING_REGISTRY = (
-    {"sourceType": "all", "fields": ("rating", "overall_score", "score"), "canonicalConcept": "rating", "dataType": "number", "privacy": "aggregate_safe", "aggregation": "average"},
+    {"sourceType": "all", "fields": ("rating", "overall_score", "overall_satisfaction", "sat_booking", "sat_terminal", "sat_boarding", "sat_cabin_seating", "sat_food", "sat_cleanliness", "sat_staff", "sat_wifi", "sat_punctuality", "sat_value"), "canonicalConcept": "rating", "dataType": "number", "privacy": "aggregate_safe", "aggregation": "average"},
+    {"sourceType": "all", "fields": ("score",), "canonicalConcept": "app_review_rating", "dataType": "number", "privacy": "aggregate_safe", "aggregation": "average"},
     {"sourceType": "all", "fields": ("nps", "nps_score"), "canonicalConcept": "nps", "dataType": "number", "privacy": "aggregate_safe", "aggregation": "average"},
     {"sourceType": "all", "fields": ("csat", "csat_score"), "canonicalConcept": "csat", "dataType": "number", "privacy": "aggregate_safe", "aggregation": "average"},
     {"sourceType": "all", "fields": ("revenue", "gross_amount", "amount"), "canonicalConcept": "revenue", "dataType": "number", "privacy": "aggregate_safe", "aggregation": "sum"},
@@ -23,9 +24,9 @@ SEMANTIC_MAPPING_REGISTRY = (
     {"sourceType": "it_data", "fields": ("delay", "delay_minutes"), "canonicalConcept": "delay", "dataType": "number", "privacy": "aggregate_safe", "aggregation": "average"},
     {"sourceType": "it_data", "fields": ("cancellation", "cancellation_rate", "cancelled"), "canonicalConcept": "cancellation", "dataType": "number", "privacy": "aggregate_safe", "aggregation": "average"},
     {"sourceType": "all", "fields": ("market",), "canonicalConcept": "market", "dataType": "category", "privacy": "aggregate_safe", "aggregation": "distribution"},
-    {"sourceType": "all", "fields": ("route",), "canonicalConcept": "route", "dataType": "category", "privacy": "aggregate_safe", "aggregation": "distribution"},
-    {"sourceType": "all", "fields": ("language",), "canonicalConcept": "language", "dataType": "category", "privacy": "aggregate_safe", "aggregation": "distribution"},
-    {"sourceType": "all", "fields": ("country",), "canonicalConcept": "country", "dataType": "category", "privacy": "aggregate_safe", "aggregation": "distribution"},
+    {"sourceType": "all", "fields": ("route", "crossing", "route_mentioned", "route_query", "route_text", "route_region", "route_corridor"), "canonicalConcept": "route", "dataType": "category", "privacy": "aggregate_safe", "aggregation": "distribution"},
+    {"sourceType": "all", "fields": ("language", "preferred_language", "language_hint"), "canonicalConcept": "language", "dataType": "category", "privacy": "aggregate_safe", "aggregation": "distribution"},
+    {"sourceType": "all", "fields": ("country", "residence_region", "residence_country"), "canonicalConcept": "country", "dataType": "category", "privacy": "aggregate_safe", "aggregation": "distribution"},
 )
 
 SOURCE_PUBLISH_RULES = {
@@ -140,6 +141,12 @@ def publish_run(manifest, owner_id, quality):
     lineage = run.setdefault("lineage", {})
     lineage.setdefault("analysisVersion", ANALYSIS_VERSION)
     lineage["schemaFingerprint"] = schema_fingerprint(_columns_from_manifest(result), result_batch.get("sourceType"))
+    lineage["availableConcepts"] = sorted({
+        mapping["canonicalConcept"]
+        for column in _columns_from_manifest(result)
+        for mapping in [resolve_semantic_mapping(result_batch.get("sourceType"), column)]
+        if mapping and mapping["privacy"] == "aggregate_safe"
+    })
     lineage.setdefault("sourceType", result_batch.get("sourceType"))
     return result
 
@@ -148,9 +155,16 @@ def _number(value):
     if isinstance(value, bool) or value is None:
         return None
     try:
-        return float(str(value).strip().replace(",", "."))
+        normalized = str(value).strip().replace(",", ".")
+        match = re.search(r"[-+]?\d+(?:\.\d+)?", normalized)
+        return float(match.group(0)) if match else None
     except (TypeError, ValueError):
         return None
+
+
+def _currency(value):
+    match = re.search(r"\b([A-Za-z]{3})\b\s*$", str(value or ""))
+    return match.group(1).upper() if match else "UNSPECIFIED"
 
 
 def _analysis_rows(sheet):
@@ -169,7 +183,7 @@ def _safe_dimension_value(concept, value):
     if not candidate or len(candidate) > 64 or any(char in candidate for char in "\r\n\t"):
         return None
     if concept in {"market", "country", "language"}:
-        return candidate.upper() if re.fullmatch(r"[A-Za-z]{2,3}", candidate) else None
+        return candidate.upper() if re.fullmatch(r"[A-Za-z]{2,3}", candidate) else candidate if re.fullmatch(r"[A-Za-z][A-Za-z -]{1,63}", candidate) else None
     return candidate if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _-]{0,63}", candidate) else None
 
 
@@ -206,7 +220,7 @@ def build_analysis_snapshot(manifest, sheets):
                 elif mapping["aggregation"] == "sum":
                     numeric = _number(value)
                     if numeric is not None:
-                        metric_values.setdefault(concept, []).append(numeric)
+                        metric_values.setdefault(concept, {}).setdefault(_currency(value), []).append(numeric)
                 elif mapping["aggregation"] == "distribution":
                     safe_value = _safe_dimension_value(concept, value)
                     if safe_value:
@@ -216,7 +230,14 @@ def build_analysis_snapshot(manifest, sheets):
 
     metrics = {}
     for concept, values in sorted(metric_values.items()):
-        metrics[concept] = {"average": round(sum(values) / len(values), 2), "sampleSize": len(values)} if concept in {"rating", "nps", "csat", "delay", "cancellation"} else {"sum": round(sum(values), 2), "sampleSize": len(values)}
+        if concept != "revenue" and concept != "bookings":
+            metrics[concept] = {"average": round(sum(values) / len(values), 2), "sampleSize": len(values)}
+        else:
+            currencies = {
+                currency: {"sum": round(sum(currency_values), 2), "sampleSize": len(currency_values)}
+                for currency, currency_values in sorted(values.items())
+            }
+            metrics[concept] = {"sampleSize": sum(item["sampleSize"] for item in currencies.values()), "currencies": currencies}
     insights, recommendations = [], []
     rating = metrics.get("rating")
     if rating and rating["average"] < 3:

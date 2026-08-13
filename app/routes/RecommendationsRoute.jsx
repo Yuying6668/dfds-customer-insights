@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Panel, PageSummary } from "../components/common.jsx";
 import { getDatasetRunAnalytics, subscribeDatasetRun } from "../scripts/services/dataset-run-api.mjs";
+import { getDatasetAnalysisState } from "../lib/dataset-version.mjs";
 
 function routeMatches(routeFocus, routes) {
   return routeFocus === "all" || routes.includes(routeFocus);
@@ -29,8 +30,8 @@ export function RecommendationsRoute({ data, routeFocus }) {
     });
   }, [datasetRunId]);
   if (datasetRunId) {
-    if (!snapshot || snapshot.analysisState) return <section className="view active"><PageSummary title="Dataset decisions are processing" description="Recommendations will appear when the published run analysis is ready." points={[]} /></section>;
-    if (snapshot.error) return <section className="view active"><PageSummary title="Dataset decisions are unavailable" description="The selected dataset could not be loaded." points={[]} /></section>;
+    if (!snapshot || getDatasetAnalysisState(snapshot) === "processing") return <section className="view active"><PageSummary title="Dataset decisions are processing" description="Recommendations will appear when the published run analysis is ready." points={[]} /></section>;
+    if (getDatasetAnalysisState(snapshot) === "failed") return <section className="view active"><PageSummary title="Dataset decisions are unavailable" description="The selected dataset could not be loaded." points={[]} /></section>;
     return <section className="view active"><PageSummary title="Recommendations from uploaded data" description={`Dataset ${snapshot.version || "unknown"} · analysis ${snapshot.analysisVersion || "unknown"}`} points={[]} /><Panel title="Recommended actions" eyebrow="Dataset run"><div className="recommendation-list">{(snapshot.recommendations || []).length ? snapshot.recommendations.map((item) => <article key={item.type} className="recommendation-item"><h3>{item.type.replaceAll("_", " ")}</h3><p>Evidence: {item.evidence?.metric} {item.evidence?.value}</p><small>Batch {snapshot.batchId} · Quality exceptions: {item.qualityContext?.mappingExceptions || 0}</small></article>) : <p>This uploaded schema does not support decision recommendations.</p>}</div></Panel></section>;
   }
   const items = data.recommendations

@@ -10,6 +10,148 @@ from backend.mia_graph.dataset import run_dataset_graph
 
 
 class DatasetRunReviewApiTests(unittest.TestCase):
+    def test_booking_amounts_are_aggregated_when_the_value_includes_a_currency_code(self):
+        manifest = {
+            "batch": {"id": "batch-1", "version": "v1", "sourceType": "it_data", "datasetRun": {"lineage": {}}},
+            "files": [{"sheets": [{"columns": ["gross_amount", "route"]}]}],
+        }
+        sheets = [{
+            "columns": ["gross_amount", "route"],
+            "rows": [
+                {"gross_amount": "113.15 EUR", "route": "Dover-Calais"},
+                {"gross_amount": "345868.00 DKK", "route": "Dover-Calais"},
+            ],
+            "cleaning": {"cleanedRows": 1},
+        }]
+
+        snapshot = server.build_analysis_snapshot(manifest, sheets)
+
+        self.assertEqual(snapshot["metrics"]["revenue"], {
+            "sampleSize": 2,
+            "currencies": {
+                "DKK": {"sum": 345868.0, "sampleSize": 1},
+                "EUR": {"sum": 113.15, "sampleSize": 1},
+            },
+        })
+    def test_ready_analytics_exposes_version_and_ready_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            batch_id = "00000000-0000-0000-0000-000000000099"
+            batch_dir = root / batch_id
+            batch_dir.mkdir()
+            manifest = {
+                "batch": {
+                    "id": batch_id,
+                    "ownerId": "user-1",
+                    "version": "v20260813-101400",
+                    "datasetRun": {"state": "published", "publishedAt": "2026-08-13T10:14:00Z", "analysisState": "ready"},
+                }
+            }
+            (batch_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            (batch_dir / "analytics.json").write_text(json.dumps({
+                "generatedAt": "2026-08-13T10:16:00Z",
+                "schemaAvailability": {"availableConcepts": ["rating"]},
+            }), encoding="utf-8")
+
+            with patch.object(server, "UPLOAD_STORAGE_DIR", root):
+                status, result = server.dataset_run_analytics(batch_id, {"id": "user-1"})
+
+            self.assertEqual(status, 200)
+            self.assertEqual(result["batchId"], batch_id)
+            self.assertEqual(result["version"], "v20260813-101400")
+            self.assertEqual(result["publishedAt"], "2026-08-13T10:14:00Z")
+            self.assertEqual(result["analysisState"], "ready")
+
+    def test_processing_analytics_exposes_batch_version_and_publish_time(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            batch_id = "00000000-0000-0000-0000-000000000100"
+            batch_dir = root / batch_id
+            batch_dir.mkdir()
+            manifest = {
+                "batch": {
+                    "id": batch_id,
+                    "ownerId": "user-1",
+                    "version": "v20260813-101500",
+                    "datasetRun": {"state": "published", "publishedAt": "2026-08-13T10:15:00Z", "analysisState": "processing"},
+                }
+            }
+            (batch_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+            with patch.object(server, "UPLOAD_STORAGE_DIR", root):
+                status, result = server.dataset_run_analytics(batch_id, {"id": "user-1"})
+
+            self.assertEqual(status, 202)
+            self.assertEqual(result["version"], "v20260813-101500")
+            self.assertEqual(result["publishedAt"], "2026-08-13T10:15:00Z")
+            self.assertEqual(result["analysisState"], "processing")
+            self.assertEqual(result["schemaAvailability"]["availableConcepts"], [])
+
+    def test_processing_analytics_uses_live_state_when_a_previous_snapshot_exists(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            batch_id = "00000000-0000-0000-0000-000000000103"
+            batch_dir = root / batch_id
+            batch_dir.mkdir()
+            manifest = {
+                "batch": {
+                    "id": batch_id,
+                    "ownerId": "user-1",
+                    "version": "v20260813-102000",
+                    "datasetRun": {
+                        "state": "published",
+                        "publishedAt": "2026-08-13T10:20:00Z",
+                        "analysisState": "processing",
+                        "lineage": {"availableConcepts": ["rating"]},
+                    },
+                }
+            }
+            (batch_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            (batch_dir / "analytics.json").write_text(json.dumps({
+                "version": "v20260813-101500",
+                "generatedAt": "2026-08-13T10:16:00Z",
+                "schemaAvailability": {"availableConcepts": ["rating"]},
+                "metrics": {"rating": {"average": 4.2, "sampleSize": 10}},
+            }), encoding="utf-8")
+
+            with patch.object(server, "UPLOAD_STORAGE_DIR", root):
+                status, result = server.dataset_run_analytics(batch_id, {"id": "user-1"})
+
+            self.assertEqual(status, 202)
+            self.assertEqual(result["version"], "v20260813-102000")
+            self.assertEqual(result["analysisState"], "processing")
+            self.assertEqual(result["schemaAvailability"]["availableConcepts"], ["rating"])
+            self.assertNotIn("metrics", result)
+
+    def test_failed_analytics_does_not_return_a_stale_snapshot_as_ready(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            batch_id = "00000000-0000-0000-0000-000000000104"
+            batch_dir = root / batch_id
+            batch_dir.mkdir()
+            manifest = {
+                "batch": {
+                    "id": batch_id,
+                    "ownerId": "user-1",
+                    "version": "v20260813-102100",
+                    "datasetRun": {
+                        "state": "published",
+                        "publishedAt": "2026-08-13T10:21:00Z",
+                        "analysisState": "failed",
+                        "lineage": {"availableConcepts": ["rating"]},
+                    },
+                }
+            }
+            (batch_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            (batch_dir / "analytics.json").write_text(json.dumps({"metrics": {"rating": {"average": 4.2}}}), encoding="utf-8")
+
+            with patch.object(server, "UPLOAD_STORAGE_DIR", root):
+                status, result = server.dataset_run_analytics(batch_id, {"id": "user-1"})
+
+            self.assertEqual(status, 500)
+            self.assertEqual(result["analysisState"], "failed")
+            self.assertNotIn("metrics", result)
+
     def test_simulated_public_evidence_to_approved_snapshot_flow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

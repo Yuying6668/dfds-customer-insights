@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveWorkspaceDestination, startWorkspaceSession } from "../app/lib/auth.js";
+import { ensureAdministratorDemoSession, resolveWorkspaceDestination, startWorkspaceSession } from "../app/lib/auth.js";
 
 test("sends a project user to the data-intake workspace", () => {
   assert.equal(resolveWorkspaceDestination("project_user", "project_user", "/overview"), "/it-data-flow");
@@ -36,5 +36,15 @@ test("starts an administrator session without credentials", () => {
   assert.equal(destination, "/agent-control");
   assert.equal(storage.get("dfds-access-token"), "public-administrator");
   assert.equal(storage.get("dfds-account-role"), "administrator");
+  assert.equal(storage.get("dfds-workspace-role"), "administrator");
+});
+
+test("direct Agent Control visit creates the public administrator demo session", () => {
+  const storage = new Map();
+  storage.setItem = (key, value) => storage.set(key, value);
+
+  ensureAdministratorDemoSession(storage);
+
+  assert.equal(storage.get("dfds-access-token"), "public-administrator");
   assert.equal(storage.get("dfds-workspace-role"), "administrator");
 });

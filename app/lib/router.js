@@ -28,6 +28,10 @@ export function normalizePath(pathname) {
   return routeConfig.some((route) => route.path === pathname) ? pathname : "/overview";
 }
 
+export function normalizedPathWithSearch(pathname, search = "") {
+  return `${normalizePath(pathname)}${search || ""}`;
+}
+
 export function getRouteLabel(pathname) {
   return routeConfig.find((route) => route.path === pathname)?.label || "Overview";
 }
@@ -50,8 +54,14 @@ export function buildPageBrief({ pathname, routeFocus, title, summary }) {
 }
 
 export function navigate(pathname) {
-  if (window.location.pathname !== pathname) {
-    window.history.pushState({}, "", pathname);
+  const target = new URL(pathname, window.location.href);
+  const current = new URL(window.location.href);
+  if (!target.searchParams.has("datasetRun") && current.searchParams.has("datasetRun")) {
+    target.searchParams.set("datasetRun", current.searchParams.get("datasetRun"));
+  }
+  const destination = `${target.pathname}${target.search}`;
+  if (`${current.pathname}${current.search}` !== destination) {
+    window.history.pushState({}, "", destination);
     window.dispatchEvent(new Event("dfds:navigate"));
   }
 }
@@ -62,7 +72,7 @@ export function useLocationState(React) {
 
   useEffect(() => {
     if (!window.location.pathname || window.location.pathname === "/") {
-      window.history.replaceState({}, "", "/it-data-flow");
+      window.history.replaceState({}, "", normalizedPathWithSearch(window.location.pathname, window.location.search));
     }
 
     const onChange = () => setPathname(normalizePath(window.location.pathname));

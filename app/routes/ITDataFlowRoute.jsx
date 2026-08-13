@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { DataTable } from "../components/common.jsx";
 import { ExceptionRowReview } from "../components/ExceptionRowReview.jsx";
 import { reviewUploadedBatch, uploadBatch } from "../scripts/services/upload-batch-api.mjs";
-import { publishDatasetRun } from "../scripts/services/dataset-run-api.mjs";
+import { activateDatasetRun, publishDatasetRun } from "../scripts/services/dataset-run-api.mjs";
 import { navigate } from "../lib/router.js";
 import { getAccessToken } from "../lib/auth.js";
 import { getLifecycleStages, getPersistedITDataFlowReviewState } from "./it-data-flow-state.mjs";
@@ -13,7 +13,7 @@ function isAcceptedFile(file) {
   return ACCEPTED_EXTENSIONS.has(String(file.name).split(".").pop().toLowerCase());
 }
 
-export function ITDataFlowRoute({ data, onUploadedBatchChange, initialUploadedBatch }) {
+export function ITDataFlowRoute({ data, onUploadedBatchChange, initialUploadedBatch, onDatasetPublished }) {
   const summary = data.itDataFlowSummary;
   const persistedReviewState = getPersistedITDataFlowReviewState(initialUploadedBatch);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -224,6 +224,14 @@ export function ITDataFlowRoute({ data, onUploadedBatchChange, initialUploadedBa
         setAiReview(review);
         onUploadedBatchChange?.({ ...batch, aiReview: review });
         setAiReviewState("complete");
+        setPublishState("publishing");
+        const activated = await activateDatasetRun(batch.batch.id);
+        const activatedBatch = { ...batch, batch: { ...batch.batch, ...activated.batch }, aiReview: review };
+        setUploadedBatch(activatedBatch);
+        onUploadedBatchChange?.(activatedBatch);
+        setSaveState("saved");
+        setPublishState("published");
+        onDatasetPublished?.(batch.batch.id);
       } catch (reviewError) {
         setAiReviewState("failed");
         setUploadError(reviewError.message);
@@ -280,7 +288,11 @@ export function ITDataFlowRoute({ data, onUploadedBatchChange, initialUploadedBa
   const publishToInsights = async () => {
     if (!uploadedBatch || publishState === "publishing") return;
     setPublishState("publishing");
-    try { await publishDatasetRun(uploadedBatch.batch.id); setPublishState("published"); }
+    try {
+      await publishDatasetRun(uploadedBatch.batch.id);
+      setPublishState("published");
+      onDatasetPublished?.(uploadedBatch.batch.id);
+    }
     catch (error) { setPublishState("failed"); setUploadError(error.message); }
   };
 
@@ -401,7 +413,7 @@ export function ITDataFlowRoute({ data, onUploadedBatchChange, initialUploadedBa
             <h4 id="workbookPreviewTitle">Cleaned uploaded data</h4>
           </div>
           <div className="cleaned-data-actions">
-            <button className="text-button" type="button" onClick={saveCleanedData} disabled={saveState === "saving"}>
+            <button className="text-button" type="button" onClick={saveCleanedData} disabled={saveState === "saving" || publishState === "published"}>
               {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save cleaned data"}
             </button>
             <button className="primary-button" type="button" onClick={publishToInsights} disabled={saveState !== "saved" || publishState === "publishing"}>{publishState === "published" ? "Published" : publishState === "publishing" ? "Publishing..." : "Publish to Insights"}</button>

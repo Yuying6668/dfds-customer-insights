@@ -1,13 +1,15 @@
 import React from "react";
 import { Panel, PageSummary } from "../components/common.jsx";
 import { UploadedInsightPanel } from "../components/UploadedInsightPanel.jsx";
+import { UploadedInsightView } from "../components/UploadedInsightView.jsx";
 import { useDatasetInsight } from "../hooks/use-dataset-insight.mjs";
 
 export function AppReviewsRoute({ data }) {
   const { analytics, loading, supported } = useDatasetInsight("app-reviews");
+  if (loading) return <section className="view active"><PageSummary title="Uploaded data is processing" description="App Reviews will refresh when the published analysis is ready." points={[]} /></section>;
+  if (supported && analytics) return <UploadedInsightView analytics={analytics} title="App Reviews" description="Uploaded app-review scores and distributions are" />;
   return (
     <section className="view active">
-      {loading ? <PageSummary title="Uploaded data is processing" description="App Reviews will refresh when the published analysis is ready." points={[]} /> : supported ? <UploadedInsightPanel analytics={analytics} title="App Reviews from uploaded data" /> : null}
       <PageSummary
         title="Check if the app is helping customers"
         description="This page shows how people rate the DFDS Passenger app and what they struggle with before or during their trip."

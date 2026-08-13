@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, urlparse
 from openpyxl import load_workbook
 
 from backend import hybrid_retrieval, rag_embeddings
-from backend.agent_monitoring_demo import build_demo_events, summarize_route_monitoring
+from backend.agent_monitoring_demo import DEMO_BATCH, DEMO_EVENT_COUNT, build_demo_events, summarize_route_monitoring
 from backend.identity import hash_password, normalize_username, validate_registration_username, verify_password
 from backend.mia_graph.conversation import build_conversation_graph
 from backend.mia_graph.checkpoint import checkpoint_session
@@ -1375,28 +1375,47 @@ def seed_agent_monitoring_demo(conn):
             cur.execute(
                 """INSERT INTO app_users (id, username, password_hash, role)
                    VALUES (%s, %s, %s, 'project_user')
-                   ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username
+                   ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username
                    RETURNING id""",
-                (user_id, user_key, hash_password("demo-monitoring-only")),
+                (user_id, event["username"], hash_password("246810")),
             )
             user_ids[user_key] = str(cur.fetchone()["id"])
         for event in events:
             cur.execute(
                 """INSERT INTO chat_sessions (id, user_id, user_language, active_view, route_focus, created_at, updated_at)
                    VALUES (%s, %s, 'English', 'agent-control', %s, %s, %s)
-                   ON CONFLICT (id) DO NOTHING""",
+                   ON CONFLICT (id) DO UPDATE SET
+                     user_id = EXCLUDED.user_id,
+                     user_language = EXCLUDED.user_language,
+                     active_view = EXCLUDED.active_view,
+                     route_focus = EXCLUDED.route_focus,
+                     created_at = EXCLUDED.created_at,
+                     updated_at = EXCLUDED.updated_at""",
                 (event["session_id"], user_ids[event["user_key"]], event["route_key"], event["created_at"], event["created_at"]),
             )
             cur.execute(
                 """INSERT INTO chat_messages (id, session_id, role, message_text, evidence_context, page_context, created_at)
                    VALUES (%s, %s, 'user', %s, '{}'::jsonb, %s::jsonb, %s)
-                   ON CONFLICT (id) DO NOTHING""",
+                   ON CONFLICT (id) DO UPDATE SET
+                     session_id = EXCLUDED.session_id,
+                     role = EXCLUDED.role,
+                     message_text = EXCLUDED.message_text,
+                     evidence_context = EXCLUDED.evidence_context,
+                     page_context = EXCLUDED.page_context,
+                     created_at = EXCLUDED.created_at""",
                 (str(uuid.uuid5(uuid.UUID("e4c8dc2a-8ed7-4d39-a96d-6f13e580c4cf"), f"message:{event['id']}")), event["session_id"], event["message"], json.dumps({"demo_agent_monitoring": True, "route_key": event["route_key"]}), event["created_at"]),
             )
             cur.execute(
                 """INSERT INTO rag_usage_events (id, user_id, chat_session_id, retrieval_trace, input_tokens, output_tokens, total_tokens, created_at)
                    VALUES (%s, %s, %s, %s::jsonb, %s, %s, %s, %s)
-                   ON CONFLICT (id) DO NOTHING""",
+                   ON CONFLICT (id) DO UPDATE SET
+                     user_id = EXCLUDED.user_id,
+                     chat_session_id = EXCLUDED.chat_session_id,
+                     retrieval_trace = EXCLUDED.retrieval_trace,
+                     input_tokens = EXCLUDED.input_tokens,
+                     output_tokens = EXCLUDED.output_tokens,
+                     total_tokens = EXCLUDED.total_tokens,
+                     created_at = EXCLUDED.created_at""",
                 (event["id"], user_ids[event["user_key"]], event["session_id"], json.dumps(event["retrieval_trace"]), event["input_tokens"], event["output_tokens"], event["total_tokens"], event["created_at"]),
             )
     conn.commit()
@@ -3306,6 +3325,8 @@ def _process_dataset_run(batch_id, event_id):
     event = claim_outbox(batch_dir)
     if not event or event["eventId"] != event_id:
         return
+    published = None
+    run = None
     try:
         manifest = load_batch_manifest(UPLOAD_STORAGE_DIR, batch_id)
         _, sheets = _cleaned_batch_sheets(UPLOAD_STORAGE_DIR, batch_id)
@@ -3380,8 +3401,16 @@ def _process_dataset_run(batch_id, event_id):
         _write_upload_batch_manifest(published)
         complete_outbox(batch_dir, event_id)
     except Exception:
-        run["analysisState"] = "failed"
-        _write_upload_batch_manifest(published)
+        if published is None:
+            try:
+                published = load_batch_manifest(UPLOAD_STORAGE_DIR, batch_id)
+                run = (published.get("batch") or {}).get("datasetRun") or None
+            except (FileNotFoundError, ValueError, json.JSONDecodeError):
+                published = None
+                run = None
+        if run is not None and published is not None:
+            run["analysisState"] = "failed"
+            _write_upload_batch_manifest(published)
         complete_outbox(batch_dir, event_id, "failed")
 
 
@@ -3416,13 +3445,26 @@ def dataset_run_analytics(batch_id, identity):
         return 404, {"error": "Uploaded batch was not found"}
     except PermissionError as exc:
         return 403, {"error": str(exc)}
-    run = (manifest.get("batch") or {}).get("datasetRun") or {}
+    batch = manifest.get("batch") or {}
+    run = batch.get("datasetRun") or {}
     if run.get("state") != "published":
         return 409, {"error": "Dataset run has not been published", "analysisState": run.get("analysisState", "not_started")}
     snapshot_path = UPLOAD_STORAGE_DIR / str(batch_id) / "analytics.json"
-    if not snapshot_path.is_file():
-        return 202, {"batchId": str(batch_id), "analysisState": run.get("analysisState", "processing")}
-    return 200, json.loads(snapshot_path.read_text(encoding="utf-8"))
+    if run.get("analysisState") in {"processing", "not_started", "failed"}:
+        status = 500 if run.get("analysisState") == "failed" else 202
+        return status, {
+            "batchId": str(batch_id),
+            "version": batch.get("version"),
+            "publishedAt": run.get("publishedAt"),
+            "analysisState": run.get("analysisState", "processing"),
+            "schemaAvailability": {"availableConcepts": list((run.get("lineage") or {}).get("availableConcepts") or [])},
+        }
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    snapshot.setdefault("batchId", str(batch_id))
+    snapshot.setdefault("version", batch.get("version"))
+    snapshot.setdefault("publishedAt", run.get("publishedAt"))
+    snapshot.setdefault("analysisState", run.get("analysisState", "ready"))
+    return 200, snapshot
 
 
 def compare_dataset_runs(current_id, baseline_id, identity):
@@ -3684,7 +3726,7 @@ def admin_observability():
             route_monitoring = summarize_route_monitoring([dict(row) for row in cur.fetchall()])
     finally:
         conn.close()
-    return {"connected": True, "demo": {"batch": "demo_agent_monitoring_v1", "events": 150}, "tokens": {"input": int(tokens["input_tokens"]), "output": int(tokens["output_tokens"]), "total": int(tokens["total_tokens"]), "requests": int(tokens["requests"])}, "layers": layers, "users": users, "routeMonitoring": route_monitoring}
+    return {"connected": True, "demo": {"batch": DEMO_BATCH, "events": DEMO_EVENT_COUNT}, "tokens": {"input": int(tokens["input_tokens"]), "output": int(tokens["output_tokens"]), "total": int(tokens["total_tokens"]), "requests": int(tokens["requests"])}, "layers": layers, "users": users, "routeMonitoring": route_monitoring}
 
 
 def store_chat_turn(payload, answer, rag_context, identity=None):

@@ -3,7 +3,7 @@ import { DataTable } from "../components/common.jsx";
 import { ExceptionRowReview } from "../components/ExceptionRowReview.jsx";
 import { getAccessToken } from "../lib/auth.js";
 import { reviewUploadedBatch, uploadBatch } from "../scripts/services/upload-batch-api.mjs";
-import { publishDatasetRun } from "../scripts/services/dataset-run-api.mjs";
+import { activateDatasetRun, publishDatasetRun } from "../scripts/services/dataset-run-api.mjs";
 import { navigate } from "../lib/router.js";
 import { getPersistedSurveyReviewState, getSurveyLifecycleStages, isAcceptedSurveyFile, surveyPreviewCounts } from "./survey-csv-state.mjs";
 
@@ -33,7 +33,7 @@ function standardFieldFor(column) {
   return "source_attribute";
 }
 
-export function SurveyCsvRoute({ onUploadedBatchChange, initialUploadedBatch }) {
+export function SurveyCsvRoute({ onUploadedBatchChange, initialUploadedBatch, onDatasetPublished }) {
   const persistedReviewState = getPersistedSurveyReviewState(initialUploadedBatch);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadedBatch, setUploadedBatch] = useState(initialUploadedBatch);
@@ -142,6 +142,14 @@ export function SurveyCsvRoute({ onUploadedBatchChange, initialUploadedBatch }) 
         setAiReview(review);
         onUploadedBatchChange?.({ ...batch, aiReview: review });
         setAiReviewState("complete");
+        setPublishState("publishing");
+        const activated = await activateDatasetRun(batch.batch.id);
+        const activatedBatch = { ...batch, batch: { ...batch.batch, ...activated.batch }, aiReview: review };
+        setUploadedBatch(activatedBatch);
+        onUploadedBatchChange?.(activatedBatch);
+        setSaveState("saved");
+        setPublishState("published");
+        onDatasetPublished?.(batch.batch.id);
       } catch (error) {
         setAiReviewState("failed");
         setUploadError(error.message);
@@ -188,6 +196,7 @@ export function SurveyCsvRoute({ onUploadedBatchChange, initialUploadedBatch }) 
     try {
       await publishDatasetRun(uploadedBatch.batch.id);
       setPublishState("published");
+      onDatasetPublished?.(uploadedBatch.batch.id);
     } catch (error) { setPublishState("failed"); setUploadError(error.message); }
   };
 
@@ -202,7 +211,7 @@ export function SurveyCsvRoute({ onUploadedBatchChange, initialUploadedBatch }) 
     </section>
     {uploadedBatch ? <ol className="batch-lifecycle" aria-label="Survey standardisation lifecycle">{lifecycleStages.map((stage, index) => <li key={stage.key} className={stage.state}><span>{index + 1}</span><div><strong>{stage.label}</strong><small>{stage.detail}</small></div></li>)}</ol> : null}
     {uploadedBatch ? <section className="ai-review-result" aria-live="polite" aria-labelledby="surveyMiaReviewTitle"><p className="eyebrow">MIA summary</p><h4 id="surveyMiaReviewTitle">What the uploaded data shows</h4>{aiReviewState === "loading" ? <p>Preparing the survey business summary.</p> : null}{aiReviewState === "failed" ? <p>A MIA summary is not available for this upload.</p> : null}{aiReview ? <div className="ai-review-findings ai-business-review"><article className="business-overview-panel"><h5>Dataset Overview</h5><dl className="dataset-overview-grid"><div><dt>Records</dt><dd>{datasetOverview.recordCount.toLocaleString()}</dd></div><div><dt>Data sources</dt><dd>{datasetOverview.dataSources.join(", ") || "Not identified"}</dd></div><div><dt>Time period</dt><dd>{datasetOverview.timePeriod}</dd></div><div><dt>Countries</dt><dd>{datasetOverview.countries.join(", ") || "Not identified"}</dd></div><div><dt>Routes</dt><dd>{datasetOverview.routes.join(", ") || "Not identified"}</dd></div><div><dt>Languages</dt><dd>{datasetOverview.languages.join(", ") || "Not identified"}</dd></div></dl><h5>Main Business Topics</h5><div className="business-topic-groups"><div><strong>Customer themes</strong><p>{businessReview.mainBusinessTopics.customerThemes.join(" · ") || "Not identified"}</p></div><div><strong>Service areas</strong><p>{businessReview.mainBusinessTopics.serviceAreas.join(" · ") || "Not identified"}</p></div><div><strong>Operations</strong><p>{businessReview.mainBusinessTopics.operations.join(" · ") || "Not identified"}</p></div></div><h5>Dataset Summary</h5><p className="ai-review-summary">{businessReview.datasetSummary}</p></article><article className="key-insights-panel"><h5>Key Insights</h5>{businessReview.keyInsights.length ? <div className="key-insight-grid">{businessReview.keyInsights.map((insight) => <section key={`${insight.title}-${insight.detail}`} className="key-insight-card"><strong>{insight.title}</strong><p>{insight.detail}</p></section>)}</div> : <p>No key business insights were identified from the uploaded rows.</p>}</article></div> : null}</section> : null}
-    {uploadedBatch && selectedSheet ? <section className="workbook-preview-panel survey-standardisation-preview" aria-labelledby="surveyPreviewTitle"><div className="workbook-preview-header"><div><p className="eyebrow">Questionnaire standardisation preview</p><h4 id="surveyPreviewTitle">Cleaned survey evidence</h4></div><div className="cleaned-data-actions"><button className="text-button" type="button" onClick={saveCleanedData} disabled={saveState === "saving"}>{saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save cleaned data"}</button><button className="primary-button" type="button" onClick={publishToInsights} disabled={saveState !== "saved" || publishState === "publishing"}>{publishState === "published" ? "Published" : publishState === "publishing" ? "Publishing..." : "Publish to Insights"}</button>{publishState === "published" ? <button className="text-button" type="button" onClick={() => navigate(`/overview?datasetRun=${encodeURIComponent(uploadedBatch.batch.id)}`)}>View insights</button> : null}<select value={exportFormat} onChange={(event) => setExportFormat(event.target.value)} aria-label="Export format"><option value="xlsx">Excel</option><option value="csv">CSV</option></select><button className="text-button" type="button" onClick={exportCleanedData}>Export</button></div></div>
+    {uploadedBatch && selectedSheet ? <section className="workbook-preview-panel survey-standardisation-preview" aria-labelledby="surveyPreviewTitle"><div className="workbook-preview-header"><div><p className="eyebrow">Questionnaire standardisation preview</p><h4 id="surveyPreviewTitle">Cleaned survey evidence</h4></div><div className="cleaned-data-actions"><button className="text-button" type="button" onClick={saveCleanedData} disabled={saveState === "saving" || publishState === "published"}>{saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save cleaned data"}</button><button className="primary-button" type="button" onClick={publishToInsights} disabled={saveState !== "saved" || publishState === "publishing"}>{publishState === "published" ? "Published" : publishState === "publishing" ? "Publishing..." : "Publish to Insights"}</button>{publishState === "published" ? <button className="text-button" type="button" onClick={() => navigate(`/overview?datasetRun=${encodeURIComponent(uploadedBatch.batch.id)}`)}>View insights</button> : null}<select value={exportFormat} onChange={(event) => setExportFormat(event.target.value)} aria-label="Export format"><option value="xlsx">Excel</option><option value="csv">CSV</option></select><button className="text-button" type="button" onClick={exportCleanedData}>Export</button></div></div>
       <div className="workbook-tabs" role="tablist" aria-label="Survey worksheets">{sheets.map((sheet) => <button key={sheet.key} className={sheet.key === selectedSheet.key ? "active" : ""} type="button" role="tab" aria-selected={sheet.key === selectedSheet.key} onClick={() => { setSelectedSheetKey(sheet.key); setPage(1); }}><strong>{sheet.name}</strong><small>{sheet.rowCount} rows</small></button>)}</div>
       <div className="workbook-tabs survey-preview-tabs" role="tablist" aria-label="Survey preview views">{[["standardised", "Standardised responses"], ["mapping", "Question mapping"], ["exceptions", "Exceptions"]].map(([key, label]) => <button key={key} className={previewTab === key ? "active" : ""} type="button" role="tab" aria-selected={previewTab === key} onClick={() => setPreviewTab(key)}><strong>{label}</strong></button>)}</div>
       {sheetError ? <p className="workbook-load-error">{sheetError}</p> : null}

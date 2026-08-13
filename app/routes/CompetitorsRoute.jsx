@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { BulletList, Panel, PageSummary } from "../components/common.jsx";
 import { UploadedInsightPanel } from "../components/UploadedInsightPanel.jsx";
+import { UploadedInsightView } from "../components/UploadedInsightView.jsx";
 import { useDatasetInsight } from "../hooks/use-dataset-insight.mjs";
 
 function parseReviewCount(value) {
@@ -24,7 +25,6 @@ export function CompetitorsRoute({ data }) {
   const [filter, setFilter] = useState("");
   const [sort, setSort] = useState("default");
   const { analytics, loading, supported } = useDatasetInsight("competitors");
-
   const rows = useMemo(() => {
     const query = filter.trim().toLowerCase();
     const baseline = data.competitors.find((item) => item.company === "DFDS");
@@ -49,9 +49,11 @@ export function CompetitorsRoute({ data }) {
     return baseline ? [baseline, ...competitors] : competitors;
   }, [data.competitors, filter, sort]);
 
+  if (loading) return <section className="view active"><PageSummary title="Uploaded data is processing" description="Competitor context will refresh when the published analysis is ready." points={[]} /></section>;
+  if (supported && analytics) return <UploadedInsightView analytics={analytics} title="Competitor market signals" description="Uploaded market and rating indicators are" />;
+
   return (
     <section className="view active">
-      {loading ? <PageSummary title="Uploaded data is processing" description="Competitor context will refresh when the published analysis is ready." points={[]} /> : supported ? <UploadedInsightPanel analytics={analytics} title="Market signal from uploaded data" /> : null}
       <PageSummary
         title="See how Mia's Cruises compares with other ferry brands"
         description="This page shows which ferry companies matter for comparison, how customers rate them, and where their routes overlap with Mia's Cruises."

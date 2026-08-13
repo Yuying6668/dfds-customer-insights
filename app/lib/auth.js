@@ -40,6 +40,14 @@ export function startWorkspaceSession(role, storage = window.localStorage) {
   return session.destination;
 }
 
+export function ensureAdministratorDemoSession(storage = window.localStorage) {
+  const session = workspaceSessions.administrator;
+  storage.setItem("dfds-access-token", session.token);
+  storage.setItem("dfds-account-role", "administrator");
+  storage.setItem("dfds-workspace-role", "administrator");
+  return session.destination;
+}
+
 export function getWorkspaceRole() {
   return window.localStorage.getItem("dfds-workspace-role") || "project_user";
 }

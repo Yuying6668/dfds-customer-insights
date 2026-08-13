@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BulletList, MetricCard, Panel, PageSummary } from "../components/common.jsx";
 import { compareDatasetRuns, getDatasetRunAnalytics, listDatasetRuns, retryDatasetRun, subscribeDatasetRun } from "../scripts/services/dataset-run-api.mjs";
+import { getDatasetAnalysisState } from "../lib/dataset-version.mjs";
 
 function parseRating(value) {
   const match = String(value || "").match(/[\d.]+/);
@@ -21,7 +22,7 @@ export function OverviewRoute({ data, routeFocus }) {
     if (!datasetRunId) { setDatasetAnalytics(null); setDatasetState("public"); return undefined; }
     setDatasetState("loading");
     getDatasetRunAnalytics(datasetRunId)
-      .then((payload) => { setDatasetAnalytics(payload); setDatasetState(payload.analysisState ? "processing" : "ready"); })
+      .then((payload) => { setDatasetAnalytics(payload); setDatasetState(getDatasetAnalysisState(payload)); })
       .catch(() => setDatasetState("failed"));
     return subscribeDatasetRun(datasetRunId, (status) => {
       const state = status.datasetRun?.analysisState;

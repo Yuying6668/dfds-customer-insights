@@ -1,6 +1,7 @@
 import React from "react";
 import { BulletList, Panel, PageSummary } from "../components/common.jsx";
 import { UploadedInsightPanel } from "../components/UploadedInsightPanel.jsx";
+import { UploadedInsightView } from "../components/UploadedInsightView.jsx";
 import { useDatasetInsight } from "../hooks/use-dataset-insight.mjs";
 
 function routeMatches(routeFocus, routes) {
@@ -39,6 +40,8 @@ function routePriority(routeFocus, routes) {
 
 export function CustomerVoiceRoute({ data, routeFocus }) {
   const { analytics, loading, supported } = useDatasetInsight("customer-voice");
+  if (loading) return <section className="view active"><PageSummary title="Uploaded data is processing" description="Customer Voice will refresh when the published analysis is ready." points={[]} /></section>;
+  if (supported && analytics) return <UploadedInsightView analytics={analytics} title="Customer Voice" description="Customer feedback metrics and distributions are" />;
   const routeSignals = data.signals
     .filter((item) => routeMatches(routeFocus, [item.route]))
     .slice()
@@ -54,7 +57,6 @@ export function CustomerVoiceRoute({ data, routeFocus }) {
 
   return (
     <section className="view active">
-      {loading ? <PageSummary title="Uploaded data is processing" description="Customer Voice will refresh when the published analysis is ready." points={[]} /> : supported ? <UploadedInsightPanel analytics={analytics} title="Customer Voice from uploaded data" /> : null}
       <PageSummary
         title="See what customers keep saying"
         description="This page groups public comments into clear themes, so you can quickly see what people praise, complain about, or repeat often."

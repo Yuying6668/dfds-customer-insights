@@ -1,6 +1,7 @@
 import React from "react";
 import { DataTable, MetricCard, Panel, PageSummary } from "../components/common.jsx";
 import { UploadedInsightPanel } from "../components/UploadedInsightPanel.jsx";
+import { UploadedInsightView } from "../components/UploadedInsightView.jsx";
 import { useDatasetInsight } from "../hooks/use-dataset-insight.mjs";
 
 function SliceBars({ items, valueKey = "trips" }) {
@@ -25,6 +26,8 @@ function SliceBars({ items, valueKey = "trips" }) {
 
 export function PassengerProfileRoute({ data }) {
   const { analytics, loading, supported } = useDatasetInsight("passenger-profile");
+  if (loading) return <section className="view active"><PageSummary title="Uploaded data is processing" description="Passenger Profile will refresh when the published analysis is ready." points={[]} />{analytics ? <UploadedInsightPanel analytics={analytics} title="Passenger Profile from uploaded data" /> : null}</section>;
+  if (supported && analytics) return <UploadedInsightView analytics={analytics} title="Passenger profile from uploaded data" description="Passenger and booking indicators are" />;
   const profile = data.passengerProfileSummary;
   const actarRows = profile.actarSlices.map((slice) => ({
     key: `${slice.actionArea}-${slice.customerTarget}`,
@@ -37,7 +40,6 @@ export function PassengerProfileRoute({ data }) {
 
   return (
     <section className="view active">
-      {loading ? <PageSummary title="Uploaded data is processing" description="Passenger Profile will refresh when the published analysis is ready." points={[]} /> : supported ? <UploadedInsightPanel analytics={analytics} title="Passenger Profile from uploaded data" /> : null}
       <PageSummary
         eyebrow="Passenger profile sub-agent"
         title="Who rides which routes, and what do they seem to prefer?"

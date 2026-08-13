@@ -8,27 +8,33 @@ import uuid
 
 DEMO_NAMESPACE = uuid.UUID("e4c8dc2a-8ed7-4d39-a96d-6f13e580c4cf")
 DEMO_BATCH = "demo_agent_monitoring_v1"
+DEMO_EVENT_COUNT = 166
+# Events are 8 minutes apart (plus a 0-4 minute jitter), keeping all records in 24 hours.
+DEMO_EVENT_INTERVAL_MINUTES = 8
 ROUTES = (
     ("dover-calais", "Dover-Calais"),
     ("newhaven-dieppe", "Newhaven-Dieppe"),
     ("newcastle-ijmuiden", "Newcastle-IJmuiden"),
     ("jersey", "Jersey / Channel Islands"),
 )
-USERS = ("Route operations", "Customer experience", "Revenue planning", "Service recovery", "Network analyst")
+USERS = ("Sophie Lambert", "Oliver Jensen", "Emma Williams", "Lucas Martin", "Nina Sørensen")
 PROMPTS = (
     "Summarise the latest customer friction signals and recommended action.",
     "Which journey stage has the most negative sentiment this week?",
     "Compare service recovery themes with the prior operating period.",
     "Show the evidence behind the route delay communication trend.",
     "Draft a route operations briefing from the monitored signals.",
+    "Are check-in queues improving after the new passenger messaging?",
+    "What should the onboard team prioritise for the next departure?",
+    "Find the customer evidence supporting a disruption update.",
 )
 
 
 def build_demo_events(now: datetime | None = None) -> list[dict]:
-    """Return 150 stable, route-distributed monitoring events for the last 24 hours."""
+    """Return 166 stable, route-distributed monitoring events for the last 24 hours."""
     anchor = (now or datetime.now(timezone.utc)).replace(second=0, microsecond=0)
     events = []
-    for index in range(150):
+    for index in range(DEMO_EVENT_COUNT):
         route_key, route_name = ROUTES[index % len(ROUTES)]
         input_tokens = 240 + ((index * 37) % 560)
         output_tokens = 135 + ((index * 29) % 420)
@@ -44,7 +50,7 @@ def build_demo_events(now: datetime | None = None) -> list[dict]:
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
                 "total_tokens": input_tokens + output_tokens,
-                "created_at": anchor - timedelta(minutes=index * 9 + (index % 5)),
+                "created_at": anchor - timedelta(minutes=index * DEMO_EVENT_INTERVAL_MINUTES + (index % 5)),
                 "retrieval_trace": {
                     "demo_agent_monitoring": True,
                     "demo_batch": DEMO_BATCH,
