@@ -4327,7 +4327,9 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             conn = connect_db()
             if conn is None:
-                self.send_json(503, {"error": "Database is required for evaluation history"})
+                # Monitoring has a deterministic demo stream, so an unavailable history store
+                # should leave the administrator page usable and simply show no saved runs.
+                self.send_json(200, {"runs": [], "connected": False})
                 return
             try:
                 with conn.cursor() as cur:

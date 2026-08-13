@@ -184,14 +184,14 @@ export function AgentControlRoute() {
 
     <Panel title="Evaluation runs" eyebrow="Promotion gate" pill={evaluationState === "running" ? "Running" : "Frozen set"}>
       <div className="agent-evaluation-action"><button type="button" onClick={runEvaluation} disabled={evaluationState === "running"}>{evaluationState === "running" ? "Running evaluation" : "Run frozen evaluation"}</button><span>{evaluationState !== "idle" && evaluationState !== "running" ? evaluationState : ""}</span></div>
-      <DataTable columns={["evaluation_set_version", "promotion_state", "recall_at_5", "citation_correctness", "p95_latency_ms", "details"]} rows={evaluationRuns.map((run) => ({
+      <DataTable columns={["evaluation_set_version", "promotion_state", "recall_at_5", "citation_correctness", "p95_latency_ms", "details"]} rows={evaluationRuns.length ? evaluationRuns.map((run) => ({
         evaluation_set_version: run.evaluation_set_version || run.evaluationSetVersion || "-",
         promotion_state: run.promotion_state || run.promotionState || run.status || "-",
         recall_at_5: Number(run.metrics?.recall_at_5 || 0).toFixed(3),
         citation_correctness: Number(run.metrics?.citation_correctness || 0).toFixed(3),
         p95_latency_ms: `${formatNumber(run.metrics?.p95_latency_ms)} ms`,
         details: <button type="button" onClick={() => openEvaluation(run.id)}>Open</button>
-      }))} />
+      })) : [{ evaluation_set_version: "No saved evaluations", promotion_state: "History store unavailable", recall_at_5: "-", citation_correctness: "-", p95_latency_ms: "-", details: "Run history appears when the database is connected." }]} />
       {selectedEvaluation && <div className="agent-evaluation-detail">
         <div className="agent-evaluation-detail-header"><strong>Run {selectedEvaluation.run?.id}</strong><button type="button" onClick={() => setSelectedEvaluation(null)}>Close</button></div>
         <p>Trace: {selectedEvaluation.trace?.traceId || "-"} · Graph: {selectedEvaluation.trace?.graphVersion || "-"}</p>
