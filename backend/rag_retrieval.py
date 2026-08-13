@@ -9,6 +9,19 @@ from rank_bm25 import BM25Okapi
 
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+|[\u4e00-\u9fff]", re.IGNORECASE)
+STOPWORDS = {"a", "an", "and", "are", "for", "from", "how", "in", "is", "of", "on", "the", "to", "what", "which", "with"}
+CHINESE_QUERY_EXPANSIONS = {
+    "纽卡斯尔": ("newcastle",),
+    "艾默伊登": ("ijmuiden",),
+    "航线": ("route",),
+    "服务": ("service", "staff", "onboard"),
+    "优势": ("strength", "helpful", "onboard"),
+    "延误": ("delay",),
+    "登船": ("boarding",),
+    "应用": ("app",),
+    "登录": ("login",),
+    "预订": ("booking",),
+}
 
 
 @dataclass(frozen=True)
@@ -33,6 +46,16 @@ def tokenize(text: object) -> list[str]:
     return TOKEN_PATTERN.findall(str(text or "").lower())
 
 
+def query_tokens(text: object) -> list[str]:
+    """Expand a small approved business lexicon and discard non-discriminative tokens."""
+    raw = str(text or "").lower()
+    tokens = [token for token in tokenize(raw) if token not in STOPWORDS]
+    for term, expansions in CHINESE_QUERY_EXPANSIONS.items():
+        if term in raw:
+            tokens.extend(expansions)
+    return tokens
+
+
 def _row_text(row: dict) -> str:
     keywords = " ".join(str(value) for value in (row.get("keywords") or []))
     return " ".join(
@@ -46,16 +69,16 @@ def _row_text(row: dict) -> str:
 
 
 def rank_evidence(query: str, rows: list[dict], *, route_key: str = "all", limit: int = 5) -> RetrievalResult:
-    query_tokens = tokenize(query)
-    if not query_tokens:
+    normalized_query_tokens = query_tokens(query)
+    if not normalized_query_tokens:
         return RetrievalResult(items=[], mode="unavailable", reason="empty_query")
     if not rows:
         return RetrievalResult(items=[], mode="bm25", reason="empty_corpus")
 
     corpus = [tokenize(_row_text(row)) for row in rows]
     scorer = BM25Okapi(corpus)
-    scores = scorer.get_scores(query_tokens)
-    query_terms = set(query_tokens)
+    scores = scorer.get_scores(normalized_query_tokens)
+    query_terms = set(normalized_query_tokens)
     if not any(query_terms.intersection(document) for document in corpus):
         return RetrievalResult(items=[], mode="bm25", reason="no_lexical_match")
     ranked = []

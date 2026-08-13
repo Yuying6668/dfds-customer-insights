@@ -21,6 +21,14 @@ def _reject_untrusted(value: Any, path: str = "") -> None:
             _reject_untrusted(child, path)
 
 
+def validate_dataset_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Reject raw/restricted fields before a Dataset Graph checkpoint is made."""
+    if not isinstance(snapshot, dict):
+        raise ValueError("dataset snapshot must be an object")
+    _reject_untrusted(snapshot)
+    return snapshot
+
+
 @dataclass(frozen=True)
 class ConversationInput:
     message: str

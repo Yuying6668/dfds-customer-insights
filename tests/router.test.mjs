@@ -9,3 +9,7 @@ test("opens IT Data Flow from the root route", () => {
 test("keeps the Overview route available", () => {
   assert.equal(normalizePath("/overview"), "/overview");
 });
+
+test("keeps the administrator monitoring route available", () => {
+  assert.equal(normalizePath("/agent-control"), "/agent-control");
+});

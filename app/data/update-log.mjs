@@ -1,5 +1,23 @@
 export const supervisorLogs = [
   {
+    "time": "2026-08-11 16:30",
+    "module": "Mia LangGraph Closure and Acceptance Hardening",
+    "change": "Completed a local acceptance pass over the three Mia graphs and tightened evaluation label isolation, Dataset input validation, node recovery, trigger wiring, human-review metrics, and shared demo trace evidence",
+    "reason": "The agentic customer-intelligence design required more than graph-shaped code: every graph needed bounded recovery, safe state boundaries, explicit triggers, human-review promotion input, and an auditable end-to-end demonstration.",
+    "scope": "Conversation, Dataset Insight, and Evaluation graphs; graph state contracts; PostgreSQL checkpoint integration points; external refresh and component-version event endpoints; evaluation label vault; human-review metrics and promotion gate; demo trace records; regression tests",
+    "result": "The local suite now passes 85 Python tests. The demo executes Dataset, Conversation, and Evaluation sequentially with a shared trace ID and memory checkpoint, and Dataset rejects raw rows or restricted fields before graph execution. Production Evaluation prepares held-out labels outside checkpointed graph state, while human-review outcomes feed overall and segmented metrics. PostgreSQL checkpoint, live Langfuse delivery, and deployment governance evidence remain environment-gated acceptance items.",
+    "status": "Local implementation verified; production environment acceptance pending"
+  },
+  {
+    "time": "2026-08-10 12:00",
+    "module": "EU Regulatory Boundaries Reference",
+    "change": "Added a locally versioned GDPR and EU AI Act boundary register for Mia",
+    "reason": "Mia needs a traceable regulatory baseline for privacy, AI governance, human oversight, and future scope decisions.",
+    "scope": "GDPR and EU AI Act requirements mapped to Mia controls, official EUR-Lex identifiers and source links",
+    "result": "A CSV reference now records the applicable legal provisions, dates, official sources, and the corresponding product boundary or control.",
+    "status": "Completed"
+  },
+  {
     "time": "2026-07-30 12:00",
     "module": "Data Intake Summary and File-Level Exports",
     "change": "Rebuilt Data Intake Summary around current-batch MIA metadata and separated standardised exports by uploaded file",

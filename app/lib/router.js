@@ -1,4 +1,5 @@
 export const routeConfig = [
+  { path: "/agent-control", view: "agent-control", label: "Agent Control", hidden: true },
   { path: "/it-data-flow", view: "it-data-flow", label: "IT Data Flow", group: "Data Intake" },
   { path: "/survey-csv", view: "survey-csv", label: "Survey Intake", group: "Data Intake" },
   { path: "/data-basis", view: "data-basis", label: "Data Intake Summary", group: "Data Intake" },

@@ -31,6 +31,8 @@
 - `2026-07-22.md`：规则型 validation agent、PG review persistence helper、以及 `/api/review-runs/validate-chat`。
 - `2026-07-23.md`：Mia user-facing answer cleanup、expandable chat drawer、Enter-to-send、多语言检测和 acknowledgement small-talk routing。
 - `2026-07-28.md`：IT Data Flow 页面、平台共用 memory architecture、Mia 上下文和日志同步更新。
+- `2026-08-10.md`：GDPR 与 EU AI Act 的官方来源、Mia 边界映射和本地 CSV 参考登记。
+- `2026-08-11.md`：Mia 三张 LangGraph 的本机验收、状态边界收紧、触发器/重试/人审指标闭环，以及剩余 PostgreSQL、Langfuse 和生产治理环境门槛。
 
 ## 维护规则
 
@@ -44,3 +46,7 @@
 - 实现内容
 - 测试数据与验证
 - 后续注意点
+
+## EU 法规参考
+
+`data/compliance/eu_gdpr_ai_act_mia_boundaries.csv` 是 MIA 的 GDPR 与 EU AI Act 边界登记册。它不是法律意见；任何新数据类型、个人层面决策、跨境传输或可能的 high-risk AI 用例都必须由 Legal 和 DPO 复核。

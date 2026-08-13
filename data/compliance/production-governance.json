@@ -1,0 +1,82 @@
+{
+  "version": "2026-08-10.1",
+  "evidence_version": "2026-08-11.1",
+  "sources": [
+    {
+      "id": "internal-customer-insights",
+      "purpose": "aggregate customer intelligence decision support",
+      "source_terms": "internal-approved-purpose",
+      "retention_days": 90,
+      "deletion_owner": "data-governance",
+      "data_steward": "customer-insights-steward",
+      "lawful_basis": "documented-purpose-review-required",
+      "evidence_ref": "evidence://pending/internal-customer-insights",
+      "owner": "data-governance",
+      "reviewed_at": "2026-08-11"
+    },
+    {
+      "id": "approved-public-evidence",
+      "purpose": "aggregate comparative customer signals",
+      "source_terms": "approved-collection-method-and-source-terms",
+      "retention_days": 30,
+      "deletion_owner": "evidence-owner",
+      "data_steward": "external-evidence-steward",
+      "lawful_basis": "source-authority-and-terms-recorded",
+      "evidence_ref": "evidence://pending/approved-public-evidence",
+      "owner": "evidence-owner",
+      "reviewed_at": "2026-08-11"
+    }
+  ],
+  "processors": [
+    {
+      "id": "model-provider",
+      "dpa": "pending-production-approval",
+      "regions": ["EEA-approved-region-required"],
+      "retention_days": 0,
+      "transfer_mechanism": "document-before-production",
+      "encryption": "document-before-production",
+      "evidence_ref": "evidence://pending/model-provider",
+      "owner": "security",
+      "reviewed_at": "2026-08-11"
+    },
+    {
+      "id": "embedding-provider",
+      "dpa": "pending-production-approval",
+      "regions": ["EEA-approved-region-required"],
+      "retention_days": 0,
+      "transfer_mechanism": "document-before-production",
+      "encryption": "document-before-production",
+      "evidence_ref": "evidence://pending/embedding-provider",
+      "owner": "security",
+      "reviewed_at": "2026-08-11"
+    },
+    {
+      "id": "observability-provider",
+      "dpa": "pending-production-approval",
+      "regions": ["EEA-approved-region-required"],
+      "retention_days": 30,
+      "transfer_mechanism": "document-before-production",
+      "encryption": "document-before-production",
+      "evidence_ref": "evidence://pending/observability-provider",
+      "owner": "security",
+      "reviewed_at": "2026-08-11"
+    }
+  ],
+  "deployment": {
+    "auth_protocol": "oidc",
+    "mfa_assurance": "aal2",
+    "roles": {
+      "governance_admin": "governance-admin",
+      "data_admin": "data-admin",
+      "reviewer": "mia-reviewer",
+      "evaluation_admin": "evaluation-admin"
+    },
+    "tls": "deployment-evidence-required",
+    "encryption_at_rest": "deployment-evidence-required",
+    "secret_manager": "managed-kms-reference-required",
+    "audit_sink": "approved-audit-sink-required"
+  },
+  "dpia": {"status": "required_pending", "evidence_ref": "evidence://pending/dpia", "reviewer": "dpo", "reviewed_at": "2026-08-11"},
+  "ai_risk": {"classification": "limited-risk", "prohibited_use_reviewed": false, "evidence_ref": "evidence://pending/ai-risk", "reviewer": "governance", "reviewed_at": "2026-08-11"},
+  "training": []
+}

@@ -15,6 +15,8 @@ from typing import Iterable
 
 from openpyxl import Workbook, load_workbook
 
+from backend.deletion_propagation import assert_batch_active
+
 
 ALLOWED_SUFFIXES = {".xlsx", ".xls", ".csv", ".txt", ".pdf", ".doc", ".docx"}
 MAX_FILE_BYTES = 10 * 1024 * 1024
@@ -492,6 +494,7 @@ def prepare_batch(files, storage_root, batch_id=None, owner_id=None):
 def load_batch_manifest(storage_root, batch_id):
     """Load one persisted batch from a UUID-only path without exposing file bytes."""
     normalized_id = str(uuid.UUID(str(batch_id)))
+    assert_batch_active(normalized_id, storage_root)
     manifest_path = Path(storage_root) / normalized_id / "manifest.json"
     if not manifest_path.is_file():
         raise FileNotFoundError(normalized_id)

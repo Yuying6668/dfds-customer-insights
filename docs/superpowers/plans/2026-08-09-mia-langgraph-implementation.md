@@ -17,7 +17,7 @@
 - Create: `backend/mia_graph/{__init__.py,contracts.py,policy.py,observability.py,checkpoint.py}`
 - Create: `tests/mia_graph/{__init__.py,test_policy.py,test_observability.py}`
 
-- [ ] **Step 1: Write failing tests for forbidden graph input and review routing**
+- [x] **Step 1: Write failing tests for forbidden graph input and review routing**
 
 ```python
 def test_conversation_input_rejects_raw_upload_rows():
@@ -36,7 +36,7 @@ Run: `python3 -m unittest tests.mia_graph.test_policy -v`
 
 Expected: FAIL because `backend.mia_graph` does not exist.
 
-- [ ] **Step 3: Add dependencies and minimal implementations**
+- [x] **Step 3: Add dependencies and minimal implementations**
 
 Append these constraints to `backend/requirements.txt`:
 
@@ -51,7 +51,7 @@ Implement `ConversationInput` as a Pydantic model that accepts only message, act
 
 Implement a Langfuse adapter that stores only request IDs, hashes, timing, graph/config versions, evidence IDs, scores, and verdicts. It is a no-op without Langfuse credentials. Implement a checkpointer factory returning `MemorySaver` in tests and Postgres only when `LANGGRAPH_CHECKPOINT_DATABASE_URL` is configured.
 
-- [ ] **Step 4: Run targeted tests and commit**
+- [x] **Step 4: Run targeted tests and commit**
 
 Run: `python3 -m unittest tests.mia_graph.test_policy tests.mia_graph.test_observability -v`
 
@@ -69,7 +69,7 @@ git commit -m "feat: add Mia graph safety foundation"
 - Modify: `server.py:3520-3595`
 - Create: `tests/mia_graph/test_conversation.py`
 
-- [ ] **Step 1: Write failing graph tests using fake services**
+- [x] **Step 1: Write failing graph tests using fake services**
 
 ```python
 def test_graph_returns_grounded_answer_without_review(self):
@@ -90,7 +90,7 @@ Run: `python3 -m unittest tests.mia_graph.test_conversation -v`
 
 Expected: FAIL because `build_conversation_graph` does not exist.
 
-- [ ] **Step 3: Implement the bounded graph**
+- [x] **Step 3: Implement the bounded graph**
 
 Use `StateGraph` with only these nodes:
 
@@ -110,7 +110,7 @@ workflow.add_edge("queue_review", END)
 
 In `server.py`, build graph input from the authenticated identity and `uploaded_batch_chat_context()`, never from upload rows. Adapt existing `build_rag_context`, `call_deepseek`, `run_validation_harness`, `store_chat_turn`, and `record_rag_usage` as callbacks. Preserve existing API fields: `answer`, `evidence`, `usage`, `validation`, and `sessionId`.
 
-- [ ] **Step 4: Run focused tests and commit**
+- [x] **Step 4: Run focused tests and commit**
 
 Run: `python3 -m unittest tests.mia_graph.test_conversation -v`
 
@@ -129,7 +129,7 @@ git commit -m "feat: route Mia chat through LangGraph"
 - Modify: `server.py:2614-2688`
 - Create: `tests/mia_graph/test_dataset.py`
 
-- [ ] **Step 1: Write failing idempotency and review tests**
+- [x] **Step 1: Write failing idempotency and review tests**
 
 ```python
 def test_dataset_graph_reuses_snapshot_for_identical_run(self):
@@ -149,13 +149,13 @@ Run: `python3 -m unittest tests.mia_graph.test_dataset -v`
 
 Expected: FAIL because `run_dataset_graph` does not exist.
 
-- [ ] **Step 3: Implement aggregate-only execution**
+- [x] **Step 3: Implement aggregate-only execution**
 
 Use these fixed nodes: `load_approved_run -> build_safe_aggregates -> retrieve_comparative_evidence -> analyse_patterns -> draft_recommendations -> validate_publication -> [queue_review | publish_snapshot]`.
 
 Derive `idempotency_key = sha256("{run_id}:{analysis_version}:{graph_version}")`. Persist `graphVersion`, `idempotencyKey`, `attempt`, `publicationState`, `reviewPolicyVersion`, and trace ID into the analytics snapshot. Reuse the current outbox for retry. Graph input is the existing aggregate snapshot and permitted evidence IDs only; it never contains raw rows or free text.
 
-- [ ] **Step 4: Run tests and commit**
+- [x] **Step 4: Run tests and commit**
 
 Run: `python3 -m unittest tests.mia_graph.test_dataset tests.survey_pipeline.test_exports -v`
 
@@ -173,7 +173,7 @@ git commit -m "feat: add Mia dataset insight graph"
 - Modify: `backend/rag_evaluation.py`
 - Create: `tests/mia_graph/test_evaluation.py`
 
-- [ ] **Step 1: Write failing promotion-gate tests**
+- [x] **Step 1: Write failing promotion-gate tests**
 
 ```python
 def test_regressed_recall_blocks_promotion(self):
@@ -192,11 +192,13 @@ Run: `python3 -m unittest tests.mia_graph.test_evaluation -v`
 
 Expected: FAIL because the evaluation graph does not exist.
 
-- [ ] **Step 3: Implement evaluation and gate**
+- [~] **Step 3: Implement evaluation and gate**
+
+The graph, frozen-set isolation, segmented metrics, judge contract, and promotion gates are implemented. Human-audited calibration scoring and its persistence are still outstanding.
 
 The graph is `load_frozen_evaluation_set -> execute_cases -> score_retrieval_and_answer -> compare_baseline -> [block_promotion | record_accepted_run]`. Record metric segments by language, route, and source tier; configuration versions; automated LLM-judge rubric score; human calibration score; latency; and baseline comparison. Keep held-out expected answers and evidence labels outside every live retrieval payload.
 
-- [ ] **Step 4: Run tests and commit**
+- [x] **Step 4: Run tests and commit**
 
 Run: `python3 -m unittest tests.mia_graph.test_evaluation -v`
 
@@ -215,7 +217,7 @@ git commit -m "feat: add Mia evaluation graph"
 - Modify: `server.py`
 - Modify: `tests/mia_graph/test_observability.py`
 
-- [ ] **Step 1: Write a failing audit-redaction test**
+- [x] **Step 1: Write a failing audit-redaction test**
 
 ```python
 def test_graph_audit_never_persists_raw_text_or_identity_values(self):
@@ -230,11 +232,13 @@ Run: `python3 -m unittest tests.mia_graph.test_observability -v`
 
 Expected: FAIL because `graph_audit_record` does not exist.
 
-- [ ] **Step 3: Add audit storage and operational documentation**
+- [x] **Step 3: Add audit storage and operational documentation**
 
 Add a `graph_run_audits` table with graph name/version, idempotency key, status, trace ID, redacted JSON metadata, and timestamp. Do not add raw prompt, raw review, or identity columns. Document `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST`, `LANGGRAPH_CHECKPOINT_DATABASE_URL`, processor/data-residency requirements, retention, and the no-raw-data trace rule.
 
-- [ ] **Step 4: Run full verification and commit**
+- [~] **Step 4: Run full verification and commit**
+
+The repository verification passes using the project `.venv` and bundled Node runtime. A production database-backed checkpoint and the external governance gate still require deployment evidence.
 
 Run: `python3 -m unittest tests.mia_graph tests.survey_pipeline tests.test_identity_rules -v && npm test && npm run build`
 
@@ -249,3 +253,18 @@ git commit -m "docs: document Mia graph operations"
 
 - Deterministic ingestion, three independent graphs, prompt-injection containment, review policy, idempotency, checkpoints, Langfuse redaction, evaluation, and regression gates are each covered by a test-first task.
 - Enterprise SSO/MFA, DPA execution, legal DPIA assessment, and source contracts are deployment prerequisites; they are not falsely represented as completed repository features.
+
+## Acceptance Closure (2026-08-10)
+
+`[ ]` remains on the historical Step 2 items because the original red-phase runs were not recorded and were not recreated during acceptance; this does not invalidate the current green verification, but preserves an honest audit trail.
+
+- **Code acceptance: PASS.** Three bounded LangGraph workflows are implemented and wired to the server boundary; graph policy, checkpoint selection, redacted audit metadata, review routing, idempotent dataset publication, and evaluation regression gates are covered by tests.
+- **Verification evidence: PASS.** `.venv/bin/python -m unittest discover -s tests` passed (62 tests). With the bundled Node runtime, `pnpm test` passed (25 tests) and `pnpm build` passed.
+- **Delivery demo: PASS.** `tests/test_delivery_demo.py` verifies the deterministic evidence chain and repeatable evaluation fixture.
+- **Implementation closure: PASS.** Human calibration records are validated, aggregated separately from automated judge scores, and persistable through the administrator calibration endpoint. Conversation, Dataset, and Evaluation runs now propagate a shared redacted trace ID.
+- **Runtime evidence gap: OPEN.** Conversation, Dataset, and Evaluation code paths now pass the same redacted ID as both Langfuse `id` and audit metadata, and emit a final result record with prompt/config versions, validation verdict, model usage, and final outcome. A live credentialed Langfuse run is still required to verify the external provider. Production OIDC/KMS/TLS/audit, processor/DPA, DPIA, prohibited-use, and training evidence must come from deployment/governance owners.
+- **Evaluation operations closure: PASS (2026-08-11).** `GET /api/admin/evaluations/{id}` now returns the run, redacted case outcomes, metric segments, and trace metadata; Agent Control exposes a per-run detail view.
+- **PostgreSQL runtime checkpoint closure: PASS (2026-08-11).** `scripts/langgraph_runtime_check.py` executed all three graphs against the configured local PostgreSQL saver and confirmed readable checkpoints for each graph.
+- **Demo provider evidence closure: PASS (2026-08-11).** `scripts/langgraph_demo_trace_check.py` verifies the full redacted provider-trace contract for all three graphs through an explicitly simulated adapter. This supports an interview walkthrough only; a credentialed Langfuse deployment remains a real-production prerequisite.
+- **Production acceptance: BLOCKED.** `scripts/production_preflight.py --pretty` reports missing runtime OIDC/KMS/TLS/audit evidence, processor/DPA evidence, DPIA approval, prohibited-use review, and operator training records.
+- **Closure status: PARTIALLY COMPLETE.** The repository implementation is accepted; production release remains blocked until the open items above are closed.

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "mia-demo-seed-v1",
+  "runId": "demo-internal-batch-20260810",
+  "internalBatch": {
+    "id": "demo-batch-001",
+    "sourceType": "survey",
+    "version": "survey-demo-v1",
+    "owner": "customer-insights",
+    "published": true,
+    "metrics": {"rating": {"average": 2.8, "sampleSize": 12}},
+    "distributions": {"route": {"dover-calais": 12}}
+  },
+  "externalEvidence": [{
+    "id": "external-001",
+    "sourceType": "Trustpilot",
+    "title": "Disruption updates",
+    "excerpt": "Customers report delayed disruption updates.",
+    "collectedAt": "2026-08-01",
+    "reliability": "public_snapshot",
+    "coverage": "Dover-Calais"
+  }],
+  "question": "What should we improve on Dover-Calais?"
+}

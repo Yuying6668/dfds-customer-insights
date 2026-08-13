@@ -19,6 +19,9 @@
 - [2026-07-22.md](/Users/irene/Documents/Codex/2026-07-16/product-architecture-before-writing-any-code/dfds-customer-insights-logs/2026-07-22.md)
 - [2026-07-28.md](/Users/irene/Documents/Codex/2026-07-16/product-architecture-before-writing-any-code/dfds-customer-insights-logs/2026-07-28.md)
 - [2026-07-29.md](/Users/irene/Documents/Codex/2026-07-16/product-architecture-before-writing-any-code/dfds-customer-insights-logs/2026-07-29.md)
+- [2026-08-10.md](/Users/irene/Documents/Codex/2026-07-16/product-architecture-before-writing-any-code/dfds-customer-insights-logs/2026-08-10.md)
+- [2026-08-11.md](/Users/irene/Documents/Codex/2026-07-16/product-architecture-before-writing-any-code/dfds-customer-insights-logs/2026-08-11.md)
+- [EU GDPR and AI Act boundary register CSV](/Users/irene/Documents/Codex/2026-07-16/product-architecture-before-writing-any-code/data/compliance/eu_gdpr_ai_act_mia_boundaries.csv)
 
 ## 当前整理方式
 

@@ -3,7 +3,7 @@ import { dfdsIntelligenceData as data } from "./data/index.mjs";
 import { Badge } from "./components/common.jsx";
 import { PageSummary } from "./components/common.jsx";
 import { ChatWidget } from "./components/chat-widget.jsx";
-import { getAccessToken, loginPageUrl, requiresLogin } from "./lib/auth.js";
+import { clearAuthentication, getAccessToken, getWorkspaceRole, loginPageUrl, startWorkspaceSession } from "./lib/auth.js";
 import { clearUploadSession, loadUploadSession, saveUploadSession } from "./lib/upload-session.mjs";
 import { displayBrandText } from "./lib/brand-display.mjs";
 import { buildPageBrief, getRouteLabel, isRouteAware, navigate, navigationGroups, normalizePath, routeConfig, routeFocusOptions, useLocationState } from "./lib/router.js";
@@ -18,9 +18,11 @@ import { UpdateLogRoute } from "./routes/UpdateLogRoute.jsx";
 import { DataBasisRoute } from "./routes/DataBasisRoute.jsx";
 import { ITDataFlowRoute } from "./routes/ITDataFlowRoute.jsx";
 import { ReviewConsoleRoute } from "./routes/ReviewConsoleRoute.jsx";
+import { AgentControlRoute } from "./routes/AgentControlRoute.jsx";
 import { listDatasetRuns } from "./scripts/services/dataset-run-api.mjs";
 
 const routeMap = {
+  "agent-control": AgentControlRoute,
   overview: OverviewRoute,
   "passenger-profile": PassengerProfileRoute,
   "customer-voice": CustomerVoiceRoute,
@@ -58,8 +60,7 @@ function getRouteAwareSummary(pathname) {
 }
 
 function LoginPage() {
-  const [mode, setMode] = useState("login"); const [username, setUsername] = useState(""); const [password, setPassword] = useState(""); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
-  const submit = async (event) => { event.preventDefault(); setError(""); setNotice(""); const endpoint = mode === "register" ? "/api/auth/register" : "/api/auth/login"; try { const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) }); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || "Request failed"); if (mode === "register") { setMode("login"); setPassword(""); setNotice("Registration complete. Sign in with your new account."); return; } window.localStorage.setItem("dfds-access-token", payload.accessToken); const target = new URLSearchParams(window.location.search).get("return_to") || "/it-data-flow"; window.location.assign(target); } catch (cause) { setError(cause.message); } };
+  const openWorkspace = (role) => window.location.assign(startWorkspaceSession(role));
   return <section className="login-shell">
     <aside className="login-brand">
       <div className="login-lockup"><span className="login-mark" aria-hidden="true">M</span><span className="login-divider" />MIA'S CRUISES</div>
@@ -67,7 +68,7 @@ function LoginPage() {
       <div className="login-pulse" aria-label="Current operational status"><div><span>System pulse</span><strong><i />Live</strong></div><p><i className="good" />Data pipeline <b>Ready</b></p><p><i className="good" />Decision workspace <b>Ready</b></p><p><i className="review" />Review queue <b>Monitored</b></p></div>
       <small className="login-footer">Mia's Cruises Customer Intelligence</small>
     </aside>
-    <main className="login-panel"><form onSubmit={submit} className="login-form-wrap"><p className="login-eyebrow">SECURE WORKSPACE</p><h2>{mode === "register" ? "Create account" : "Sign in"}</h2><p className="login-intro">{mode === "register" ? "User ID: letters only, 3-32 characters. Password: exactly 6 digits." : "Use your workspace credentials to continue."}</p><label htmlFor="login-username">User ID</label><input id="login-username" value={username} onChange={(event) => setUsername(event.target.value.replace(/[^a-z]/gi, ""))} placeholder="Enter letters only" autoComplete="username" minLength={3} maxLength={32} required /><label htmlFor="login-password">Password</label><input id="login-password" type="password" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ""))} placeholder="6 digits" autoComplete={mode === "register" ? "new-password" : "current-password"} required />{notice ? <p className="login-success" role="status">{notice}</p> : null}{error ? <p className="login-error" role="status">{error}</p> : null}<button className="login-submit" type="submit">{mode === "register" ? "Register" : "Sign in"} <span aria-hidden="true">→</span></button><button className="login-switch" type="button" onClick={() => { setMode(mode === "register" ? "login" : "register"); setError(""); setNotice(""); }}>{mode === "register" ? "Already registered? Sign in" : "New user? Register"}</button></form></main>
+    <main className="login-panel"><div className="login-form-wrap"><p className="login-eyebrow">WORKSPACE ACCESS</p><h2>Choose a workspace</h2><p className="login-intro">Select the workspace you need to open.</p><div className="workspace-entry-actions"><button className="login-submit" type="button" onClick={() => openWorkspace("project_user")}>Open project workspace <span aria-hidden="true">→</span></button><button className="login-secondary" type="button" onClick={() => openWorkspace("administrator")}>Open administrator workspace <span aria-hidden="true">→</span></button></div></div></main>
   </section>;
 }
 
@@ -76,11 +77,11 @@ export function App() {
   const pathname = useLocationState(React);
   const [routeFocus, setRouteFocus] = useRouteFocus();
   const [uploadSession, setUploadSession] = useState(() => loadUploadSession());
-  const [accessToken] = useState(() => getAccessToken());
   const [datasetRuns, setDatasetRuns] = useState([]);
   const [activeDatasetRun, setActiveDatasetRun] = useState(() => new URLSearchParams(window.location.search).get("datasetRun") || "public");
   const activePath = normalizePath(pathname);
   const activeView = activeViewFromPath(activePath);
+  const workspaceRole = getWorkspaceRole();
   const uploadedBatchId = uploadSession[activeView]?.batch?.id || null;
   const setUploadedBatch = (kind) => (batch) => setUploadSession((current) => {
     const next = { ...current, [kind]: batch || null };
@@ -102,11 +103,10 @@ export function App() {
   );
 
   useEffect(() => {
-    if (isLoginPage) return;
-    if (requiresLogin(accessToken)) {
+    if (!isLoginPage && activePath === "/agent-control" && workspaceRole !== "administrator") {
       window.location.replace(loginPageUrl());
     }
-  }, [accessToken, isLoginPage]);
+  }, [activePath, isLoginPage, workspaceRole]);
 
   if (isLoginPage) return <LoginPage />;
 
@@ -186,7 +186,7 @@ export function App() {
           {navigationGroups.map((group) => (
             <details className="nav-group" key={group} open={routeConfig.some((item) => item.group === group && item.path === activePath)}>
               <summary className="nav-group-label">{group}</summary>
-              {routeConfig.filter((item) => item.group === group).map((item) => (
+              {routeConfig.filter((item) => item.group === group && !item.hidden).map((item) => (
                 <a
                   key={item.path}
                   className={`nav-item${activePath === item.path ? " active" : ""}`}
@@ -204,7 +204,7 @@ export function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <button className="logout-nav-button" type="button" onClick={() => { clearUploadSession(); window.location.assign(loginPageUrl()); }}>
+          <button className="logout-nav-button" type="button" onClick={() => { clearUploadSession(); clearAuthentication(); window.location.assign(loginPageUrl()); }}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M10 5H5v14h5M14 8l4 4-4 4M8 12h10" />
             </svg>
@@ -256,6 +256,7 @@ export function App() {
           uploadSession={uploadSession}
           initialUploadedBatch={uploadSession[activeView] || null}
           activeDatasetRun={activeDatasetRun}
+          datasetRuns={datasetRuns}
         />}
       </main>
 

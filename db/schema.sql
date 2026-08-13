@@ -420,7 +420,7 @@ CREATE TABLE IF NOT EXISTS review_items (
   status TEXT NOT NULL DEFAULT 'pending',
   severity TEXT NOT NULL DEFAULT 'medium',
   title TEXT NOT NULL,
-  reason TEXT NOT NULL,
+  reason_hash TEXT NOT NULL,
   recommendation TEXT,
   publish_state TEXT NOT NULL DEFAULT 'internal_only',
   route_key TEXT NOT NULL DEFAULT 'all',
@@ -478,11 +478,29 @@ CREATE TABLE IF NOT EXISTS review_item_actions (
   id BIGSERIAL PRIMARY KEY,
   review_item_id BIGINT NOT NULL REFERENCES review_items(id) ON DELETE CASCADE,
   actor_type TEXT NOT NULL DEFAULT 'human',
+  actor_id TEXT,
   actor_name TEXT NOT NULL DEFAULT 'Internal reviewer',
   action_type TEXT NOT NULL,
   notes TEXT,
+  graph_run_id TEXT,
+  trace_id TEXT,
+  previous_status TEXT,
+  next_status TEXT,
+  correction TEXT,
+  idempotency_key TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE review_item_actions ADD COLUMN IF NOT EXISTS graph_run_id TEXT;
+ALTER TABLE review_item_actions ADD COLUMN IF NOT EXISTS actor_id TEXT;
+ALTER TABLE review_item_actions ADD COLUMN IF NOT EXISTS trace_id TEXT;
+ALTER TABLE review_item_actions ADD COLUMN IF NOT EXISTS previous_status TEXT;
+ALTER TABLE review_item_actions ADD COLUMN IF NOT EXISTS next_status TEXT;
+ALTER TABLE review_item_actions ADD COLUMN IF NOT EXISTS correction TEXT;
+ALTER TABLE review_item_actions ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_review_item_actions_idempotency
+  ON review_item_actions (review_item_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
 
 -- Deliberately excludes prompts, reviews, uploads, and user identifiers.
 CREATE TABLE IF NOT EXISTS graph_run_audits (
@@ -493,6 +511,167 @@ CREATE TABLE IF NOT EXISTS graph_run_audits (
   status TEXT NOT NULL,
   trace_id TEXT,
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS governance_audit_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  actor_hash TEXT NOT NULL,
+  action TEXT NOT NULL,
+  governance_version TEXT NOT NULL,
+  declaration_hash TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- A tombstone is the authoritative deletion contract. It contains only
+-- pseudonymous actor metadata and enough state to make propagation retryable.
+CREATE TABLE IF NOT EXISTS data_deletion_tombstones (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subject_type TEXT NOT NULL,
+  subject_id TEXT NOT NULL,
+  actor_hash TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('processing', 'completed', 'failed')),
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ,
+  UNIQUE (subject_type, subject_id)
+);
+
+-- Upgrade early deployments that stored a raw deletion reason before the
+-- minimised-audit contract was introduced.
+ALTER TABLE data_deletion_tombstones ADD COLUMN IF NOT EXISTS reason_hash TEXT;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'data_deletion_tombstones' AND column_name = 'reason'
+  ) THEN
+    EXECUTE 'UPDATE data_deletion_tombstones SET reason_hash = encode(digest(reason, ''sha256''), ''hex'') WHERE reason_hash IS NULL AND reason IS NOT NULL';
+  END IF;
+END $$;
+ALTER TABLE data_deletion_tombstones ALTER COLUMN reason_hash SET NOT NULL;
+ALTER TABLE data_deletion_tombstones DROP COLUMN IF EXISTS reason;
+
+CREATE TABLE IF NOT EXISTS deletion_propagation_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tombstone_id UUID NOT NULL REFERENCES data_deletion_tombstones(id) ON DELETE CASCADE,
+  layer TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('processing', 'completed', 'failed')),
+  attempts INTEGER NOT NULL DEFAULT 1,
+  last_error TEXT,
+  completed_at TIMESTAMPTZ,
+  UNIQUE (tombstone_id, layer)
+);
+
+-- Explicit provenance for every derived object. Rows remain after deletion as
+-- a minimal, non-content audit trail and are filtered by deleted_at.
+CREATE TABLE IF NOT EXISTS data_lineage (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  batch_id TEXT NOT NULL,
+  layer TEXT NOT NULL,
+  subject_type TEXT NOT NULL,
+  subject_id TEXT NOT NULL,
+  external_ref TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ,
+  tombstone_id UUID REFERENCES data_deletion_tombstones(id) ON DELETE SET NULL,
+  UNIQUE (batch_id, layer, subject_type, subject_id)
+);
+
+-- Frozen labels remain in this restricted store and are never returned by admin run APIs.
+CREATE TABLE IF NOT EXISTS mia_evaluation_set_versions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  version TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL CHECK (status IN ('draft', 'frozen', 'retired')),
+  source_snapshot_hash TEXT NOT NULL,
+  configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_by UUID REFERENCES app_users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  frozen_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS mia_evaluation_cases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  evaluation_set_id UUID NOT NULL REFERENCES mia_evaluation_set_versions(id) ON DELETE RESTRICT,
+  case_key TEXT NOT NULL,
+  question TEXT NOT NULL,
+  language TEXT NOT NULL DEFAULT 'English',
+  route_key TEXT NOT NULL DEFAULT 'all',
+  source_type TEXT NOT NULL DEFAULT 'evidence',
+  expected_answer TEXT NOT NULL,
+  expected_evidence_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  expects_abstention BOOLEAN NOT NULL DEFAULT FALSE,
+  label_hash TEXT NOT NULL,
+  UNIQUE (evaluation_set_id, case_key)
+);
+
+CREATE TABLE IF NOT EXISTS mia_evaluation_runs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  evaluation_set_id UUID NOT NULL REFERENCES mia_evaluation_set_versions(id) ON DELETE RESTRICT,
+  graph_version TEXT NOT NULL,
+  configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
+  status TEXT NOT NULL CHECK (status IN ('running', 'accepted', 'blocked', 'failed')),
+  promotion_state TEXT,
+  reasons JSONB NOT NULL DEFAULT '[]'::jsonb,
+  trace_id TEXT,
+  baseline_run_id UUID,
+  metrics JSONB NOT NULL DEFAULT '{}'::jsonb,
+  started_by UUID REFERENCES app_users(id) ON DELETE SET NULL,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS mia_evaluation_case_results (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  run_id UUID NOT NULL REFERENCES mia_evaluation_runs(id) ON DELETE CASCADE,
+  case_id UUID NOT NULL REFERENCES mia_evaluation_cases(id) ON DELETE RESTRICT,
+  label_hash TEXT NOT NULL,
+  retrieved_evidence_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  citation_correct BOOLEAN,
+  judge_score NUMERIC(4, 3),
+  human_scores JSONB,
+  human_overall_score NUMERIC(3, 1) CHECK (human_overall_score IS NULL OR (human_overall_score >= 0 AND human_overall_score <= 5)),
+  human_citation_correct BOOLEAN,
+  human_should_abstain BOOLEAN,
+  human_policy_issue BOOLEAN,
+  human_notes TEXT,
+  human_reviewer_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
+  human_reviewed_at TIMESTAMPTZ,
+  abstained BOOLEAN NOT NULL DEFAULT FALSE,
+  latency_ms NUMERIC(12, 2),
+  failed BOOLEAN NOT NULL DEFAULT FALSE,
+  error_code TEXT,
+  model_usage JSONB NOT NULL DEFAULT '{}'::jsonb,
+  trace_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (run_id, case_id)
+);
+
+ALTER TABLE mia_evaluation_case_results ADD COLUMN IF NOT EXISTS human_scores JSONB;
+ALTER TABLE mia_evaluation_case_results ADD COLUMN IF NOT EXISTS human_overall_score NUMERIC(3, 1);
+ALTER TABLE mia_evaluation_case_results ADD COLUMN IF NOT EXISTS human_citation_correct BOOLEAN;
+ALTER TABLE mia_evaluation_case_results ADD COLUMN IF NOT EXISTS human_should_abstain BOOLEAN;
+ALTER TABLE mia_evaluation_case_results ADD COLUMN IF NOT EXISTS human_policy_issue BOOLEAN;
+ALTER TABLE mia_evaluation_case_results ADD COLUMN IF NOT EXISTS human_notes TEXT;
+ALTER TABLE mia_evaluation_case_results ADD COLUMN IF NOT EXISTS human_reviewer_id UUID REFERENCES app_users(id) ON DELETE SET NULL;
+ALTER TABLE mia_evaluation_case_results ADD COLUMN IF NOT EXISTS human_reviewed_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS mia_evaluation_metric_segments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  run_id UUID NOT NULL REFERENCES mia_evaluation_runs(id) ON DELETE CASCADE,
+  segment_type TEXT NOT NULL CHECK (segment_type IN ('overall', 'language', 'route', 'source_type')),
+  segment_value TEXT NOT NULL,
+  metrics JSONB NOT NULL,
+  UNIQUE (run_id, segment_type, segment_value)
+);
+
+CREATE TABLE IF NOT EXISTS mia_evaluation_baselines (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  run_id UUID NOT NULL REFERENCES mia_evaluation_runs(id) ON DELETE RESTRICT,
+  threshold_version TEXT NOT NULL,
+  created_by UUID REFERENCES app_users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -538,6 +717,13 @@ CREATE INDEX IF NOT EXISTS idx_review_item_evidence_evidence ON review_item_evid
 CREATE INDEX IF NOT EXISTS idx_review_item_keywords_keyword ON review_item_keywords(keyword_id);
 CREATE INDEX IF NOT EXISTS idx_review_item_raw_reviews_raw_review ON review_item_raw_reviews(raw_review_id);
 CREATE INDEX IF NOT EXISTS idx_graph_run_audits_graph_created ON graph_run_audits(graph_name, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_data_deletion_tombstones_subject ON data_deletion_tombstones(subject_type, subject_id);
+CREATE INDEX IF NOT EXISTS idx_deletion_propagation_tasks_status ON deletion_propagation_tasks(status, layer);
+CREATE INDEX IF NOT EXISTS idx_data_lineage_batch_active ON data_lineage(batch_id, layer) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_mia_evaluation_cases_set ON mia_evaluation_cases(evaluation_set_id);
+CREATE INDEX IF NOT EXISTS idx_mia_evaluation_runs_started ON mia_evaluation_runs(started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_mia_evaluation_case_results_run ON mia_evaluation_case_results(run_id);
+CREATE INDEX IF NOT EXISTS idx_mia_evaluation_metric_segments_run ON mia_evaluation_metric_segments(run_id);
 CREATE INDEX IF NOT EXISTS evidence_embedding_idx
   ON evidence_items USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 10);

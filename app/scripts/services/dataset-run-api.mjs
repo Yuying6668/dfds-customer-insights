@@ -21,6 +21,17 @@ export async function retryDatasetRun(batchId) {
   return payload;
 }
 
+export async function reviewDatasetRun(batchId, decision) {
+  const response = await fetch(`/api/upload-batches/${encodeURIComponent(batchId)}/analysis/review`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getAccessToken()}`, "Content-Type": "application/json" },
+    body: JSON.stringify(decision)
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Dataset review could not be saved");
+  return payload;
+}
+
 export async function compareDatasetRuns(batchId, baselineId) {
   const response = await fetch(`/api/upload-batches/${encodeURIComponent(batchId)}/compare?baseline=${encodeURIComponent(baselineId)}`, { headers: { Authorization: `Bearer ${getAccessToken()}` } });
   const payload = await response.json();

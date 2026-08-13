@@ -12,6 +12,7 @@ import urllib.request
 import uuid
 import zlib
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from itertools import islice
 from pathlib import Path
@@ -20,11 +21,24 @@ from urllib.parse import parse_qs, urlparse
 from openpyxl import load_workbook
 
 from backend import hybrid_retrieval, rag_embeddings
+from backend.agent_monitoring_demo import build_demo_events, summarize_route_monitoring
 from backend.identity import hash_password, normalize_username, validate_registration_username, verify_password
 from backend.mia_graph.conversation import build_conversation_graph
+from backend.mia_graph.checkpoint import checkpoint_session
 from backend.mia_graph.dataset import run_dataset_graph
-from backend.mia_graph.observability import graph_audit_record
+from backend.mia_graph.triggers import MiaTriggerScheduler
+from backend.mia_graph.evaluation import (
+    aggregate_human_calibration,
+    build_evaluation_graph,
+    build_evaluation_run,
+    parse_judge_verdict,
+    validate_human_calibration_record,
+)
+from backend.mia_graph.observability import RedactedTracer, configured_langfuse_client, graph_audit_record, langfuse_batch_deletion_sink, record_graph_result_trace
 from backend.mia_graph.policy import assess_untrusted_text
+from backend.review_workflow import review_item_payload_for_graph, transition_for_action
+from backend.deletion_propagation import BatchDeletedError, assert_batch_active, propagate_batch_deletion, register_lineage
+from backend.production_governance import evaluate_readiness, load_governance, pseudonymous_actor_id, readiness_report
 from backend.upload_http import parse_multipart_files
 from backend.upload_ingest import MAX_BATCH_BYTES, UploadValidationError, _cleaned_batch_sheets, export_cleaned_batch, load_batch_manifest, prepare_batch, save_cleaned_batch, uploaded_sheet_page
 from work.dataset_run import DatasetRunError, build_analysis_snapshot, event_envelope, publish_run
@@ -47,6 +61,15 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
+
+
+def json_response_body(payload):
+    """Encode API responses containing PostgreSQL datetime values safely."""
+    return json.dumps(
+        payload,
+        ensure_ascii=False,
+        default=lambda value: value.isoformat() if hasattr(value, "isoformat") else str(value),
+    ).encode("utf-8")
 
 
 def tokenize(value: str) -> list[str]:
@@ -80,6 +103,10 @@ HTTPS_CONTEXT = ssl.create_default_context(cafile=certifi.where()) if certifi is
 SOURCE_WORKBOOK_DIR = Path("/Users/irene/Documents/Codex/2026-07-22/dfd/outputs/it_data_flow_demo/01_upload/source_workbooks")
 UPLOAD_STORAGE_DIR = ROOT / "data" / "upload_batches"
 DATASET_RUN_WORKER = ThreadPoolExecutor(max_workers=1, thread_name_prefix="dataset-run")
+MIA_GRAPH_CHECKPOINTER = None
+MIA_TRIGGER_SCHEDULER = None
+PRODUCTION_MODE_ENABLED = os.environ.get("MIA_PRODUCTION_MODE", "0").lower() in {"1", "true", "yes"}
+GOVERNANCE_AUDIT_EVENTS = []
 SOURCE_WORKBOOKS = {
     "booking_payment_export_v4.xlsx": ["Bookings", "Payments", "Service cases"],
     "crm_loyalty_snapshot.xlsx": ["Customers", "Consent", "Identity aliases"],
@@ -204,7 +231,7 @@ PROJECT_MEMORY_SEEDS = [
     },
 ]
 
-VALID_REVIEW_STATUSES = {"pending", "approved", "needs_changes", "rejected"}
+VALID_REVIEW_STATUSES = {"pending", "pending_human_review", "approved", "needs_changes", "corrected", "rejected", "withdrawn"}
 
 REVIEW_CONSOLE_SEED_ITEMS = [
     {
@@ -1322,6 +1349,7 @@ def initialize_database():
                 register_vector(conn)
             seed_database(conn)
             seed_project_memories(conn)
+            seed_agent_monitoring_demo(conn)
             analyze_database(conn)
             return True
         except Exception as exc:
@@ -1332,6 +1360,46 @@ def initialize_database():
                 conn.close()
 
     raise RuntimeError(f"Database initialization failed after waiting for PostgreSQL: {last_error}")
+
+
+def seed_agent_monitoring_demo(conn):
+    """Seed the administrator demo using the production monitoring tables, idempotently."""
+    events = build_demo_events()
+    user_ids = {}
+    with conn.cursor() as cur:
+        for event in events:
+            user_key = event["user_key"]
+            if user_key in user_ids:
+                continue
+            user_id = str(uuid.uuid5(uuid.UUID("e4c8dc2a-8ed7-4d39-a96d-6f13e580c4cf"), user_key))
+            cur.execute(
+                """INSERT INTO app_users (id, username, password_hash, role)
+                   VALUES (%s, %s, %s, 'project_user')
+                   ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username
+                   RETURNING id""",
+                (user_id, user_key, hash_password("demo-monitoring-only")),
+            )
+            user_ids[user_key] = str(cur.fetchone()["id"])
+        for event in events:
+            cur.execute(
+                """INSERT INTO chat_sessions (id, user_id, user_language, active_view, route_focus, created_at, updated_at)
+                   VALUES (%s, %s, 'English', 'agent-control', %s, %s, %s)
+                   ON CONFLICT (id) DO NOTHING""",
+                (event["session_id"], user_ids[event["user_key"]], event["route_key"], event["created_at"], event["created_at"]),
+            )
+            cur.execute(
+                """INSERT INTO chat_messages (id, session_id, role, message_text, evidence_context, page_context, created_at)
+                   VALUES (%s, %s, 'user', %s, '{}'::jsonb, %s::jsonb, %s)
+                   ON CONFLICT (id) DO NOTHING""",
+                (str(uuid.uuid5(uuid.UUID("e4c8dc2a-8ed7-4d39-a96d-6f13e580c4cf"), f"message:{event['id']}")), event["session_id"], event["message"], json.dumps({"demo_agent_monitoring": True, "route_key": event["route_key"]}), event["created_at"]),
+            )
+            cur.execute(
+                """INSERT INTO rag_usage_events (id, user_id, chat_session_id, retrieval_trace, input_tokens, output_tokens, total_tokens, created_at)
+                   VALUES (%s, %s, %s, %s::jsonb, %s, %s, %s, %s)
+                   ON CONFLICT (id) DO NOTHING""",
+                (event["id"], user_ids[event["user_key"]], event["session_id"], json.dumps(event["retrieval_trace"]), event["input_tokens"], event["output_tokens"], event["total_tokens"], event["created_at"]),
+            )
+    conn.commit()
 
 
 def retrieve_evidence_from_db(payload, limit=6):
@@ -2222,7 +2290,7 @@ def call_deepseek(payload, rag_context):
             "mode": mode,
             "intent": intent,
             "answer": answer,
-            "evidence": compact_evidence(evidence_items) if evidence_detail_requested else [],
+            "evidence": compact_evidence(evidence_items),
             "insights": compact_insights(rag_context.get("insightItems", [])),
             "memories": compact_memories(rag_context.get("memoryItems", [])),
         }
@@ -2264,7 +2332,7 @@ def call_deepseek(payload, rag_context):
         "mode": mode,
         "intent": intent,
         "answer": answer or "No answer returned by DeepSeek.",
-        "evidence": compact_evidence(evidence_items) if evidence_detail_requested else [],
+        "evidence": compact_evidence(evidence_items),
         "insights": compact_insights(rag_context.get("insightItems", [])),
         "memories": compact_memories(rag_context.get("memoryItems", [])),
         "providerUsage": response_data.get("usage", {}),
@@ -2307,6 +2375,55 @@ class ServerConversationServices:
 
     def queue_review(self, state):
         return {"publication_state": "pending_human_review"}
+
+
+class ServerEvaluationServices:
+    """Adapter for the existing retrieval and answer path; labels never enter these methods."""
+
+    def retrieve_case(self, case):
+        started = time.perf_counter()
+        payload = {"message": case["question"], "language": case.get("language", "English"), "routeKey": case.get("route", "all"), "activeView": "evaluation"}
+        rag_context = build_rag_context(payload)
+        return {
+            "retrieved_evidence_ids": [str(item.get("id")) for item in rag_context.get("evidenceItems", []) if item.get("id") is not None][:5],
+            "rag_context": rag_context,
+            "latency_ms": round((time.perf_counter() - started) * 1000, 1),
+        }
+
+    def answer_case(self, case, retrieval):
+        started = time.perf_counter()
+        payload = {"message": case["question"], "language": case.get("language", "English"), "routeKey": case.get("route", "all"), "activeView": "evaluation"}
+        status, response = call_deepseek(payload, retrieval.get("rag_context") or {})
+        return {
+            "answer": response.get("answer", ""),
+            "failed": status != 200,
+            "error_code": None if status == 200 else str(status),
+            "model_usage": response.get("providerUsage") or {},
+            "latency_ms": round((time.perf_counter() - started) * 1000, 1),
+        }
+
+    def judge_case(self, result, labels):
+        api_key = os.environ.get("DEEPSEEK_API_KEY")
+        if not api_key:
+            raise RuntimeError("DEEPSEEK_API_KEY is required for the evaluation LLM judge")
+        expected = {str(value) for value in labels.get("expected_evidence_ids") or []}
+        retrieved = {str(value) for value in result.get("retrieved_evidence_ids") or []}
+        request_body = {
+            "model": os.environ.get("MIA_EVALUATION_JUDGE_MODEL") or os.environ.get("DEEPSEEK_MODEL", "deepseek-chat"),
+            "temperature": 0,
+            "max_tokens": 120,
+            "messages": [
+                {"role": "system", "content": "You are a strict evaluation judge. Return only JSON with score (0..1), citation_correct (boolean), and rubric_version answer-quality-v1."},
+                {"role": "user", "content": json.dumps({"answer": result.get("answer", ""), "retrieved_evidence_ids": sorted(retrieved), "expected_answer": labels.get("expected_answer", ""), "expected_evidence_ids": sorted(expected), "expects_abstention": bool(labels.get("expects_abstention"))}, ensure_ascii=False)},
+            ],
+        }
+        request = urllib.request.Request(DEEPSEEK_URL, data=json.dumps(request_body).encode("utf-8"), method="POST", headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"})
+        with urllib.request.urlopen(request, timeout=35, context=HTTPS_CONTEXT) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        content = payload.get("choices", [{}])[0].get("message", {}).get("content", "")
+        verdict = parse_judge_verdict(content)
+        verdict["model_usage"] = payload.get("usage") or {}
+        return verdict
 
 
 def build_it_data_flow_review_context(manifest, cleaned_sheets=None):
@@ -2548,6 +2665,13 @@ def identity_from_authorization(value):
     prefix = "Bearer "
     if not str(value or "").startswith(prefix):
         return None
+    token = str(value)[len(prefix):]
+    public_workspace_identities = {
+        "public-project-user": {"id": "public-project-user", "username": "Project user", "role": "project_user"},
+        "public-administrator": {"id": "public-administrator", "username": "Administrator", "role": "administrator"},
+    }
+    if token in public_workspace_identities:
+        return public_workspace_identities[token]
     conn = connect_db()
     if conn is None:
         return None
@@ -2560,17 +2684,55 @@ def identity_from_authorization(value):
                 JOIN app_users u ON u.id = s.user_id
                 WHERE s.token_hash = %s AND s.expires_at > NOW()
                 """,
-                (access_token_hash(str(value)[len(prefix):]),),
+                (access_token_hash(token),),
             )
             user = cur.fetchone()
             if user:
-                cur.execute("UPDATE user_access_sessions SET last_seen_at = NOW() WHERE token_hash = %s", (access_token_hash(str(value)[len(prefix):]),))
+                cur.execute("UPDATE user_access_sessions SET last_seen_at = NOW() WHERE token_hash = %s", (access_token_hash(token),))
         conn.commit()
     finally:
         conn.close()
     if not user:
         return None
     return {"id": str(user["id"]), "username": user["username"], "role": user["role"]}
+
+
+def has_capability(identity, capability):
+    """Keep authorization server-side; the current administrator role owns governance capabilities."""
+    if not identity:
+        return False
+    if identity.get("role") == "administrator":
+        return capability in {"governance_admin", "data_admin", "reviewer", "evaluation_admin"}
+    return capability == "project_user"
+
+
+def require_production_ready():
+    if PRODUCTION_MODE_ENABLED and readiness_report().get("status") != "ready":
+        raise PermissionError("Production governance readiness is blocked")
+
+
+def production_readiness():
+    return readiness_report()
+
+
+def enable_production_mode(identity):
+    global PRODUCTION_MODE_ENABLED
+    if not has_capability(identity, "governance_admin"):
+        raise PermissionError("Governance administrator access is required")
+    report = production_readiness()
+    if report["status"] != "ready":
+        raise RuntimeError("Production governance readiness is blocked")
+    if not PRODUCTION_MODE_ENABLED:
+        PRODUCTION_MODE_ENABLED = True
+        GOVERNANCE_AUDIT_EVENTS.append({
+            "actor": pseudonymous_actor_id(identity.get("id")),
+            "action": "production_mode_enabled",
+            "governance_version": report["governance_version"],
+            "declaration_hash": report["declaration_hash"],
+            "status": "enabled",
+        })
+        record_governance_audit(GOVERNANCE_AUDIT_EVENTS[-1])
+    return {"status": "enabled", "idempotent": True, "governance": report}
 
 
 def measure_usage(payload, answer, rag_context, provider_usage=None):
@@ -2634,6 +2796,335 @@ def record_graph_audit(record):
         conn.close()
 
 
+def record_governance_audit(record):
+    """Persist only minimum governance metadata; dev mode remains usable without PostgreSQL."""
+    conn = connect_db()
+    if conn is None:
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO governance_audit_events
+                   (actor_hash, action, governance_version, declaration_hash, status)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (record["actor"], record["action"], record["governance_version"], record["declaration_hash"], record["status"]),
+            )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+    finally:
+        conn.close()
+
+
+def _evaluation_label_hash(case):
+    labels = {
+        "expected_answer": str(case.get("expected_answer") or ""),
+        "expected_evidence_ids": list(case.get("expected_evidence_ids") or []),
+        "expects_abstention": bool(case.get("expects_abstention")),
+    }
+    return hashlib.sha256(json.dumps(labels, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def freeze_evaluation_set(payload, identity):
+    """Create an immutable, restricted evaluation-set version from administrator-supplied cases."""
+    cases = payload.get("cases")
+    version = str(payload.get("version") or "").strip()
+    if not version or not isinstance(cases, list) or not cases:
+        return 400, {"error": "version and at least one evaluation case are required"}
+    if any(not isinstance(case, dict) or not str(case.get("question") or "").strip() for case in cases):
+        return 400, {"error": "every evaluation case requires a question"}
+    conn = connect_db()
+    if conn is None:
+        return 503, {"error": "Database is required for frozen evaluation sets"}
+    source_hash = hashlib.sha256(json.dumps(cases, sort_keys=True).encode("utf-8")).hexdigest()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""INSERT INTO mia_evaluation_set_versions (version, status, source_snapshot_hash, configuration, created_by, frozen_at)
+                           VALUES (%s, 'frozen', %s, %s::jsonb, %s, NOW()) RETURNING id""",
+                        (version, source_hash, json.dumps(payload.get("configuration") or {}), identity["id"]))
+            set_id = str(cur.fetchone()["id"])
+            for index, case in enumerate(cases, start=1):
+                cur.execute("""INSERT INTO mia_evaluation_cases
+                    (evaluation_set_id, case_key, question, language, route_key, source_type, expected_answer, expected_evidence_ids, expects_abstention, label_hash)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s)""",
+                    (set_id, str(case.get("case_key") or f"case-{index}"), str(case["question"]), str(case.get("language") or "English"),
+                     str(case.get("route") or "all"), str(case.get("source_type") or "evidence"), str(case.get("expected_answer") or ""),
+                     json.dumps(case.get("expected_evidence_ids") or []), bool(case.get("expects_abstention")), _evaluation_label_hash(case)))
+        conn.commit()
+        return 201, {"evaluationSetId": set_id, "version": version, "caseCount": len(cases), "status": "frozen"}
+    except Exception as exc:
+        conn.rollback()
+        return 409, {"error": f"Unable to freeze evaluation set: {exc}"}
+    finally:
+        conn.close()
+
+
+def load_frozen_evaluation_set(set_id=None):
+    conn = connect_db()
+    if conn is None:
+        raise RuntimeError("Database is required for evaluation runs")
+    run_id = None
+    try:
+        with conn.cursor() as cur:
+            if set_id:
+                cur.execute("SELECT id, version FROM mia_evaluation_set_versions WHERE id = %s AND status = 'frozen'", (set_id,))
+            else:
+                cur.execute("SELECT id, version FROM mia_evaluation_set_versions WHERE status = 'frozen' ORDER BY frozen_at DESC LIMIT 1")
+            evaluation_set = cur.fetchone()
+            if evaluation_set is None:
+                raise ValueError("No frozen evaluation set is available")
+            cur.execute("""SELECT id, question, language, route_key, source_type, expected_answer, expected_evidence_ids, expects_abstention, label_hash
+                           FROM mia_evaluation_cases WHERE evaluation_set_id = %s ORDER BY case_key""", (evaluation_set["id"],))
+            return dict(evaluation_set), [dict(row) for row in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+def run_frozen_evaluation(set_id, identity):
+    """Execute one frozen set and persist only redacted outcomes and aggregate metrics."""
+    evaluation_set, stored_cases = load_frozen_evaluation_set(set_id)
+    cases = [{
+        "question": row["question"], "language": row["language"], "route": row["route_key"], "source_type": row["source_type"],
+        "expected_answer": row["expected_answer"], "expected_evidence_ids": row["expected_evidence_ids"], "expects_abstention": row["expects_abstention"],
+    } for row in stored_cases]
+    conn = connect_db()
+    if conn is None:
+        raise RuntimeError("Database is required for evaluation runs")
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""SELECT r.id, r.metrics FROM mia_evaluation_baselines b
+                           JOIN mia_evaluation_runs r ON r.id = b.run_id ORDER BY b.created_at DESC LIMIT 1""")
+            baseline = cur.fetchone()
+            baseline_metrics = dict(baseline["metrics"]) if baseline else {}
+            cur.execute("""INSERT INTO mia_evaluation_runs (evaluation_set_id, graph_version, configuration, status, baseline_run_id, started_by)
+                           VALUES (%s, %s, %s::jsonb, 'running', %s, %s) RETURNING id""",
+                        (evaluation_set["id"], "mia-graph-v1", json.dumps({"judge_rubric_version": "citation-grounded-v1"}), baseline["id"] if baseline else None, identity["id"]))
+            run_id = str(cur.fetchone()["id"])
+        conn.commit()
+        prepared_evaluation = build_evaluation_run(cases)
+        graph = build_evaluation_graph(checkpointer=MIA_GRAPH_CHECKPOINTER, services=ServerEvaluationServices(), label_vault=prepared_evaluation["label_vault"])
+        trace_state = {
+            "graph": "evaluation", "graph_version": "mia-graph-v1", "request_id": run_id,
+            "retrieval_version": "hybrid-retrieval-v1", "judge_rubric_version": "citation-grounded-v1",
+            "prompt_version": "evaluation-judge-v1", "config_version": "mia-config-v1",
+        }
+        with RedactedTracer(configured_langfuse_client()).span("mia.evaluation.run", trace_state) as span:
+            state = graph.invoke({"cases": prepared_evaluation["live_retrieval_payload"]["cases"], "baseline_metrics": baseline_metrics, "trace_id": span.trace_id}, config={"configurable": {"thread_id": f"evaluation:{run_id}"}})
+        trace_state.update({
+            "trace_id": span.trace_id,
+            "status": state["promotion_state"],
+            "scores": state["scored_metrics"],
+            "verdict": state["reasons"],
+            "validation_verdict": state["reasons"],
+            "final_outcome": state["promotion_state"],
+        })
+        record_graph_result_trace(configured_langfuse_client(), name="mia.evaluation.result", state=trace_state, trace_id=span.trace_id)
+        trace = graph_audit_record({"graph": "evaluation", "graph_version": "mia-graph-v1", "request_id": run_id, "trace_id": span.trace_id, "status": state["promotion_state"], "scores": state["scored_metrics"], "verdict": state["reasons"], "judge_rubric_version": "citation-grounded-v1"})
+        record_graph_audit(trace)
+        with conn.cursor() as cur:
+            for source, result in zip(stored_cases, state.get("case_results") or []):
+                cur.execute("""INSERT INTO mia_evaluation_case_results
+                  (run_id, case_id, label_hash, retrieved_evidence_ids, citation_correct, judge_score, abstained, latency_ms, failed, error_code, model_usage, trace_id)
+                  VALUES (%s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s::jsonb, %s)""",
+                  (run_id, source["id"], source["label_hash"], json.dumps(result.get("retrieved_evidence_ids") or []), result.get("citation_correct"), result.get("judge_score"),
+                   not bool(result.get("retrieved_evidence_ids")), result.get("latency_ms"), bool(result.get("failed")), result.get("error_code"), json.dumps(result.get("model_usage") or {}), trace["trace_id"] if trace.get("trace_id") else None))
+            cur.execute("""INSERT INTO mia_evaluation_metric_segments (run_id, segment_type, segment_value, metrics) VALUES (%s, 'overall', 'all', %s::jsonb)""", (run_id, json.dumps(state["scored_metrics"])))
+            for key, metrics in (state.get("metric_segments") or {}).items():
+                segment_type, segment_value = key.split(":", 1)
+                cur.execute("""INSERT INTO mia_evaluation_metric_segments (run_id, segment_type, segment_value, metrics) VALUES (%s, %s, %s, %s::jsonb)""", (run_id, segment_type, segment_value, json.dumps(metrics)))
+            cur.execute("""UPDATE mia_evaluation_runs SET status = %s, promotion_state = %s, reasons = %s::jsonb, trace_id = %s, metrics = %s::jsonb, completed_at = NOW() WHERE id = %s""",
+                        (state["promotion_state"], state["promotion_state"], json.dumps(state["reasons"]), trace.get("trace_id"), json.dumps(state["scored_metrics"]), run_id))
+        conn.commit()
+        return {"id": run_id, "evaluationSetVersion": evaluation_set["version"], "status": state["promotion_state"], "promotionState": state["promotion_state"], "reasons": state["reasons"], "metrics": state["scored_metrics"], "segments": state.get("metric_segments") or {}, "traceId": trace.get("trace_id")}
+    except Exception:
+        conn.rollback()
+        if run_id:
+            with conn.cursor() as cur:
+                cur.execute("UPDATE mia_evaluation_runs SET status = 'failed', promotion_state = 'blocked', reasons = %s::jsonb, completed_at = NOW() WHERE id = %s", (json.dumps(["execution_failed"]), run_id))
+            conn.commit()
+        raise
+    finally:
+        conn.close()
+
+
+def _scheduled_dataset_graph(*, snapshot, run_id, graph_version, evidence_ids, trace_id=None, **_ignored):
+    return run_dataset_graph(snapshot, run_id=run_id, graph_version=graph_version, evidence_ids=evidence_ids, trace_id=trace_id, checkpointer=MIA_GRAPH_CHECKPOINTER)
+
+
+def _scheduled_evaluation_graph(*, trigger_event, **_ignored):
+    set_id = trigger_event.get("evaluationSetId") or trigger_event.get("evaluation_set_id")
+    if not set_id:
+        raise ValueError("version change event requires evaluationSetId")
+    return run_frozen_evaluation(set_id, {"id": "system-version-trigger"})
+
+
+def mia_trigger_scheduler():
+    global MIA_TRIGGER_SCHEDULER
+    if MIA_TRIGGER_SCHEDULER is None:
+        MIA_TRIGGER_SCHEDULER = MiaTriggerScheduler(run_dataset=_scheduled_dataset_graph, run_evaluation=_scheduled_evaluation_graph)
+    return MIA_TRIGGER_SCHEDULER
+
+
+def process_external_refresh_event(event):
+    """Production worker entry point after an approved external refresh."""
+    return mia_trigger_scheduler().poll_external_refresh(dict(event))
+
+
+def process_component_version_event(event):
+    """Production release-hook entry point for a governed version change."""
+    return mia_trigger_scheduler().poll_version_change(dict(event))
+
+
+def set_evaluation_baseline(payload, identity):
+    run_id = str(payload.get("runId") or "").strip()
+    name = str(payload.get("name") or "promotion-default")[:120]
+    if not run_id:
+        return 400, {"error": "runId is required"}
+    conn = connect_db()
+    if conn is None:
+        return 503, {"error": "Database is required for evaluation baselines"}
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id FROM mia_evaluation_runs WHERE id = %s AND status IN ('blocked', 'accepted')", (run_id,))
+            if cur.fetchone() is None:
+                return 404, {"error": "Completed evaluation run not found"}
+            cur.execute("""INSERT INTO mia_evaluation_baselines (name, run_id, threshold_version, created_by)
+                           VALUES (%s, %s, 'evaluation-gate-v1', %s)
+                           ON CONFLICT (name) DO UPDATE SET run_id = EXCLUDED.run_id, threshold_version = EXCLUDED.threshold_version, created_by = EXCLUDED.created_by, created_at = NOW()""",
+                        (name, run_id, identity["id"]))
+        conn.commit()
+        return 200, {"name": name, "runId": run_id, "thresholdVersion": "evaluation-gate-v1"}
+    finally:
+        conn.close()
+
+
+def admin_evaluation_detail(run_id):
+    """Return one evaluation run with redacted case, segment, and trace details."""
+    conn = connect_db()
+    if conn is None:
+        return 503, {"error": "Database is required for evaluation details"}
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""SELECT r.id, s.version AS evaluation_set_version, r.status, r.promotion_state, r.reasons,
+                                  r.metrics, r.trace_id, r.graph_version, r.configuration, r.started_at, r.completed_at
+                           FROM mia_evaluation_runs r JOIN mia_evaluation_set_versions s ON s.id = r.evaluation_set_id
+                           WHERE r.id = %s""", (run_id,))
+            run = cur.fetchone()
+            if run is None:
+                return 404, {"error": "Evaluation run not found"}
+            cur.execute("""SELECT result.case_id, evaluation_case.case_key, result.retrieved_evidence_ids,
+                                  result.citation_correct, result.judge_score, result.abstained, result.latency_ms,
+                                  result.failed, result.error_code, result.model_usage, result.trace_id,
+                                  result.human_scores, result.human_overall_score, result.human_citation_correct,
+                                  result.human_should_abstain, result.human_policy_issue, result.human_notes,
+                                  result.human_reviewer_id, result.human_reviewed_at
+                           FROM mia_evaluation_case_results result
+                           JOIN mia_evaluation_cases evaluation_case ON evaluation_case.id = result.case_id
+                           WHERE result.run_id = %s ORDER BY evaluation_case.case_key""", (run_id,))
+            cases = [dict(row) for row in cur.fetchall()]
+            cur.execute("""SELECT segment_type, segment_value, metrics
+                           FROM mia_evaluation_metric_segments WHERE run_id = %s
+                           ORDER BY segment_type, segment_value""", (run_id,))
+            segments = [dict(row) for row in cur.fetchall()]
+        return 200, {"run": dict(run), "caseResults": cases, "segments": segments, "trace": {"traceId": run.get("trace_id"), "graphVersion": run.get("graph_version"), "configuration": run.get("configuration") or {}}}
+    finally:
+        conn.close()
+
+
+def record_human_calibration(run_id, payload, identity):
+    """Persist reviewer scores against a completed run without exposing frozen labels."""
+    records = payload.get("records") if isinstance(payload, dict) else None
+    if not isinstance(records, list) or not records:
+        return 400, {"error": "records must be a non-empty list"}
+    try:
+        normalized = [validate_human_calibration_record(dict(record)) for record in records]
+    except (TypeError, ValueError) as exc:
+        return 400, {"error": str(exc)}
+    reviewer_id = str(identity.get("id") or "")
+    if not reviewer_id:
+        return 403, {"error": "Reviewer identity is required"}
+    conn = connect_db()
+    if conn is None:
+        return 503, {"error": "Database is required for human calibration"}
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, status FROM mia_evaluation_runs WHERE id = %s AND status IN ('accepted', 'blocked')", (run_id,))
+            if cur.fetchone() is None:
+                return 404, {"error": "Completed evaluation run not found"}
+            for record in normalized:
+                cur.execute("""UPDATE mia_evaluation_case_results result
+                               SET human_scores = %s::jsonb,
+                                   human_overall_score = %s,
+                                   human_citation_correct = %s,
+                                   human_should_abstain = %s,
+                                   human_policy_issue = %s,
+                                   human_notes = %s,
+                                   human_reviewer_id = %s,
+                                   human_reviewed_at = %s
+                               FROM mia_evaluation_cases evaluation_case
+                               WHERE result.run_id = %s
+                                 AND result.case_id = evaluation_case.id
+                                 AND evaluation_case.case_key = %s
+                               RETURNING result.case_id""",
+                            (json.dumps(record["dimension_scores"]), record["overall_score"], record["citation_correct"],
+                             record["should_abstain"], record["policy_issue"], record["notes"], reviewer_id,
+                             record["reviewed_at"], run_id, record["case_id"]))
+                if cur.fetchone() is None:
+                    raise ValueError(f"Calibration case not found in run: {record['case_id']}")
+            # Recompute the promotion-facing aggregate after calibration. Human
+            # outcomes remain separate fields, but the gate consumes their
+            # normalized metrics so a later review cannot leave stale approval.
+            cur.execute("""SELECT human_scores, human_overall_score, human_citation_correct,
+                                  human_should_abstain, human_policy_issue, judge_score
+                           FROM mia_evaluation_case_results WHERE run_id = %s
+                             AND human_overall_score IS NOT NULL""", (run_id,))
+            calibrated = []
+            for row in cur.fetchall():
+                calibrated.append({
+                    "case_id": str(row.get("case_id") or "calibration"),
+                    "dimension_scores": row.get("human_scores") or {},
+                    "overall_score": row["human_overall_score"],
+                    "citation_correct": row["human_citation_correct"],
+                    "should_abstain": row["human_should_abstain"],
+                    "policy_issue": row["human_policy_issue"],
+                    "notes": "persisted calibration",
+                    "reviewer_id": reviewer_id,
+                    "reviewed_at": "persisted",
+                    "judge_score": row.get("judge_score"),
+                })
+            human_report = aggregate_human_calibration(calibrated)
+            cur.execute("SELECT metrics FROM mia_evaluation_runs WHERE id = %s", (run_id,))
+            run_row = cur.fetchone() or {}
+            metrics = dict(run_row.get("metrics") or {})
+            metrics.update({
+                "human_overall_score": round(float(human_report.get("overall_score_mean") or 0) / 5.0, 3),
+                "human_citation_correctness": human_report.get("citation_correctness_human", 0.0),
+                "human_abstention_accuracy": human_report.get("abstention_accuracy_human", 0.0),
+                "human_policy_issue_rate": human_report.get("policy_issue_rate", 0.0),
+            })
+            cur.execute("SELECT metrics FROM mia_evaluation_runs WHERE id = (SELECT run_id FROM mia_evaluation_baselines ORDER BY created_at DESC LIMIT 1)")
+            baseline_row = cur.fetchone() or {}
+            gate = promotion_decision(metrics, dict(baseline_row.get("metrics") or {}))
+            cur.execute("""UPDATE mia_evaluation_runs SET metrics = %s::jsonb,
+                              promotion_state = %s, status = %s,
+                              reasons = %s::jsonb WHERE id = %s""",
+                        (json.dumps(metrics), gate["promotion_state"], gate["promotion_state"], json.dumps(gate["reasons"]), run_id))
+            cur.execute("""UPDATE mia_evaluation_metric_segments SET metrics = %s::jsonb
+                           WHERE run_id = %s AND segment_type = 'overall' AND segment_value = 'all'""",
+                        (json.dumps(metrics), run_id))
+        conn.commit()
+        report = aggregate_human_calibration(normalized)
+        return 200, {"runId": str(run_id), "calibration": report, "promotion": gate, "reviewedBy": pseudonymous_actor_id(reviewer_id)}
+    except ValueError as exc:
+        conn.rollback()
+        return 404, {"error": str(exc)}
+    except Exception:
+        conn.rollback()
+        return 500, {"error": "Unable to persist human calibration"}
+    finally:
+        conn.close()
+
+
 def conversation_preview(row):
     """Return a bounded, JSON-safe audit record without authentication secrets."""
     created_at = row.get("created_at")
@@ -2641,6 +3132,7 @@ def conversation_preview(row):
         "role": str(row.get("role") or "unknown"),
         "message": str(row.get("message_text") or "")[:700],
         "username": str(row.get("username") or ""),
+        "routeKey": str(row.get("route_focus") or "all"),
         "userId": str(row.get("user_id") or ""),
         "sessionId": str(row.get("session_id") or ""),
         "createdAt": created_at.isoformat() if hasattr(created_at, "isoformat") else str(created_at or ""),
@@ -2656,16 +3148,116 @@ def batch_owned_by(manifest, identity):
 
 
 def require_owned_upload_batch(batch_id, identity):
+    assert_batch_active(batch_id, UPLOAD_STORAGE_DIR)
     manifest = load_batch_manifest(UPLOAD_STORAGE_DIR, batch_id)
     if not batch_owned_by(manifest, identity):
         raise PermissionError("This upload batch belongs to another user")
     return manifest
 
 
+def delete_upload_batch(batch_id, identity, reason="User deletion request"):
+    """Tombstone and purge one owned batch; retries are idempotent."""
+    try:
+        batch_id = str(uuid.UUID(str(batch_id)))
+        assert_batch_active(batch_id, UPLOAD_STORAGE_DIR)
+        manifest = load_batch_manifest(UPLOAD_STORAGE_DIR, batch_id)
+    except ValueError:
+        return 400, {"error": "Invalid batch identifier"}
+    except BatchDeletedError:
+        return 200, {"batchId": str(batch_id), "status": "completed", "idempotent": True}
+    except FileNotFoundError:
+        return 404, {"error": "Uploaded batch was not found"}
+    owner_id = str((manifest.get("batch") or {}).get("ownerId") or "")
+    if identity.get("role") != "administrator" and owner_id != str(identity.get("id") or ""):
+        return 403, {"error": "This upload batch belongs to another user"}
+    connection = connect_db()
+    try:
+        result = propagate_batch_deletion(
+            batch_id,
+            UPLOAD_STORAGE_DIR,
+            actor_id=identity.get("id", "unknown"),
+            reason=reason,
+            db_connection=connection,
+            trace_sink=langfuse_batch_deletion_sink(),
+        )
+        return 200, {
+            "batchId": result.batch_id,
+            "status": result.status,
+            "completedLayers": list(result.completed_layers),
+            "deletionRecorded": True,
+        }
+    except Exception:
+        if connection is not None:
+            connection.rollback()
+        return 503, {"error": "Deletion propagation is pending; retry the request"}
+    finally:
+        if connection is not None:
+            connection.close()
+
+
 def _write_upload_batch_manifest(manifest):
     batch_id = str((manifest.get("batch") or {}).get("id") or "")
     batch_path = UPLOAD_STORAGE_DIR / batch_id / "manifest.json"
     batch_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def persist_upload_batch_lineage(manifest):
+    """Persist source-object lineage only; the upload payload stays on disk."""
+    connection = connect_db()
+    if connection is None:
+        return
+    batch = manifest.get("batch") or {}
+    batch_id = str(batch.get("id") or "")
+    if not batch_id:
+        return
+    try:
+        with connection.cursor() as cur:
+            cur.execute(
+                """INSERT INTO upload_batches
+                   (id, owner_scope, state, file_count, profiled_row_count, total_bytes, manifest_path)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)
+                   ON CONFLICT (id) DO UPDATE SET updated_at = NOW(), state = EXCLUDED.state""",
+                (
+                    batch_id, str(batch.get("ownerId") or ""), str(batch.get("state") or "ready_for_validation"),
+                    int(batch.get("fileCount") or 0), int(batch.get("profiledRowCount") or 0), int(batch.get("totalBytes") or 1),
+                    f"upload_batches/{batch_id}/manifest.json",
+                ),
+            )
+        register_lineage(connection, batch_id=batch_id, layer="raw_files", subject_type="upload_batch", subject_id=batch_id)
+        for file_entry in manifest.get("files") or []:
+            register_lineage(connection, batch_id=batch_id, layer="raw_files", subject_type="uploaded_file", subject_id=str(file_entry.get("id") or ""))
+            for sheet in file_entry.get("sheets") or []:
+                register_lineage(connection, batch_id=batch_id, layer="cleaned_data", subject_type="uploaded_sheet", subject_id=f"{file_entry.get('id')}:{sheet.get('name')}")
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def backfill_upload_batch_lineage():
+    """Register legacy filesystem batches without reopening their source files."""
+    if not UPLOAD_STORAGE_DIR.is_dir():
+        return
+    for manifest_path in UPLOAD_STORAGE_DIR.glob("*/manifest.json"):
+        try:
+            persist_upload_batch_lineage(json.loads(manifest_path.read_text(encoding="utf-8")))
+            batch_id = manifest_path.parent.name
+            snapshot_path = manifest_path.parent / "analytics.json"
+            if snapshot_path.is_file():
+                connection = connect_db()
+                if connection is not None:
+                    try:
+                        register_lineage(connection, batch_id=batch_id, layer="analysis_snapshot", subject_type="analytics_snapshot", subject_id=snapshot_path.name)
+                        connection.commit()
+                    finally:
+                        connection.close()
+        except (OSError, ValueError, json.JSONDecodeError):
+            continue
+        except Exception:
+            # A later startup retries the non-content lineage backfill.
+            continue
 
 
 def _dataset_run_quality(sheets):
@@ -2720,16 +3312,67 @@ def _process_dataset_run(batch_id, event_id):
         run = manifest["batch"]["datasetRun"]
         published = manifest
         snapshot = build_analysis_snapshot(published, _analysis_sheets(sheets))
-        snapshot = run_dataset_graph(
-            snapshot,
-            run_id=str(run.get("publishedAt") or batch_id),
-            graph_version="mia-graph-v1",
-            evidence_ids=[],
-        )
+        comparative_evidence = retrieve_dataset_comparative_evidence(snapshot)
+        trace_state = {
+            "graph": "dataset", "graph_version": "mia-graph-v1",
+            "request_id": str(run.get("publishedAt") or batch_id),
+            "batch_id": batch_id, "retrieval_version": "hybrid-retrieval-v1",
+            "prompt_version": "dataset-insight-v1", "config_version": "mia-config-v1",
+        }
+        with RedactedTracer(configured_langfuse_client()).span("mia.dataset.run", trace_state) as span:
+            snapshot = run_dataset_graph(
+                snapshot,
+                run_id=str(run.get("publishedAt") or batch_id),
+                graph_version="mia-graph-v1",
+                evidence_ids=comparative_evidence,
+                checkpointer=MIA_GRAPH_CHECKPOINTER,
+                trace_id=span.trace_id,
+            )
+        trace_state.update({
+            "trace_id": snapshot.get("trace_id"),
+            "status": snapshot.get("publication_state", "failed"),
+            "publication_state": snapshot.get("publication_state"),
+            "evidence_ids": snapshot.get("evidence_ids", []),
+            "validation_verdict": (snapshot.get("review") or {}).get("reasons", []),
+            "final_outcome": snapshot.get("publication_state", "failed"),
+        })
+        record_graph_result_trace(configured_langfuse_client(), name="mia.dataset.result", state=trace_state, trace_id=snapshot.get("trace_id"))
+        if snapshot.get("publication_state") == "pending_human_review":
+            graph_record = graph_audit_record({
+                "graph": "dataset", "graph_version": "mia-graph-v1",
+                "request_id": snapshot.get("graph_run_id"), "trace_id": snapshot.get("trace_id"), "status": "pending_human_review",
+                "evidence_ids": snapshot.get("evidence_ids", []),
+                "verdict": (snapshot.get("review") or {}).get("reasons", []),
+            })
+            record_graph_audit(graph_record)
+            recommendations = snapshot.get("recommendations") or []
+            recommendation = " ".join(str(item.get("type") or item.get("title") or "") for item in recommendations if isinstance(item, dict))
+            snapshot["reviewItemId"] = queue_graph_review_item(
+                graph_name="dataset", graph_run_id=str(snapshot.get("graph_run_id") or batch_id),
+                trace_id=str(graph_record.get("trace_id") or ""),
+                title="Dataset insight requires human review",
+                reason="; ".join((snapshot.get("review") or {}).get("reasons") or ["Review policy requires approval"]),
+                recommendation=recommendation,
+                evidence_ids=[str(item) for item in snapshot.get("evidence_ids") or []],
+            )
         snapshot_path = batch_dir / "analytics.json"
         snapshot_path.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
+        connection = connect_db()
+        if connection is not None:
+            try:
+                register_lineage(connection, batch_id=batch_id, layer="analysis_snapshot", subject_type="analytics_snapshot", subject_id=str(snapshot_path.name))
+                register_lineage(connection, batch_id=batch_id, layer="audit_trace", subject_type="dataset_graph_run", subject_id=str(run.get("publishedAt") or batch_id))
+                connection.commit()
+            finally:
+                connection.close()
+        record_graph_audit(graph_audit_record({
+            "graph": "dataset", "graph_version": "mia-graph-v1", "request_id": str(run.get("publishedAt") or batch_id), "trace_id": snapshot.get("trace_id"),
+            "status": snapshot.get("publication_state", "pending_human_review"), "evidence_ids": snapshot.get("evidence_ids", []),
+            "batch_id": batch_id,
+        }))
         run["analysisState"] = "ready"
         run["analysisGeneratedAt"] = snapshot["generatedAt"]
+        run.setdefault("analysisAttempts", []).append({"attempt": snapshot.get("attempt", 1), "publicationState": snapshot.get("publication_state"), "evidenceCount": len(snapshot.get("comparativeEvidence") or [])})
         run.setdefault("events", []).extend([
             event_envelope("dataset-run.published", published),
             event_envelope("dataset-run.analysis-ready", published),
@@ -2814,6 +3457,89 @@ def dataset_run_status(batch_id, identity):
     return 200, {"batchId": batch.get("id"), "version": batch.get("version"), "datasetRun": batch.get("datasetRun") or {"state": "draft", "analysisState": "not_started"}}
 
 
+def retrieve_dataset_comparative_evidence(snapshot, limit=6):
+    """Retrieve approved public evidence for aggregate dataset signals."""
+    metrics = snapshot.get("metrics") or {}
+    distributions = snapshot.get("distributions") or {}
+    route_counts = distributions.get("route") or {}
+    requested_route = "all"
+    if route_counts:
+        requested_route = max(route_counts, key=lambda key: int(route_counts.get(key) or 0))
+    metric_terms = " ".join(sorted(str(key) for key in metrics))
+    query_payload = {
+        "message": f"customer experience comparison {metric_terms}".strip(),
+        "activeView": "dataset-insight",
+        "routeKey": route_key(requested_route),
+    }
+    retrieval = retrieve_evidence_from_db(query_payload, limit=limit)
+    items = retrieval.get("items", []) if isinstance(retrieval, dict) else []
+    comparative = []
+    for item in items:
+        if bool(item.get("isSynthetic", item.get("is_synthetic", False))):
+            continue
+        source_tier = str(item.get("sourceTier") or item.get("source_tier") or "")
+        if source_tier != "public_snapshot":
+            continue
+        metadata = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
+        comparative.append({
+            "id": str(item.get("id") or ""),
+            "sourceType": str(item.get("source") or item.get("type") or "external_public"),
+            "title": str(item.get("title") or "External comparison evidence"),
+            "excerpt": str(item.get("body") or item.get("translatedContent") or "")[:500],
+            "collectedAt": str(item.get("timestamp") or ""),
+            "reliability": str(metadata.get("reliability") or "directional"),
+            "coverage": str(item.get("route") or "public source coverage"),
+        })
+    return comparative
+
+
+def review_dataset_run(batch_id, identity, payload):
+    """Apply a traceable Review Console decision to a dataset snapshot."""
+    decision = dict(payload or {})
+    status = str(decision.get("status") or "").lower()
+    if status not in {"approved", "corrected", "rejected", "withdrawn", "reanalyse"}:
+        return 400, {"error": "Invalid dataset review decision"}
+    decision["reviewedAt"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    try:
+        manifest = require_owned_upload_batch(batch_id, identity)
+    except FileNotFoundError:
+        return 404, {"error": "Uploaded batch was not found"}
+    except PermissionError as exc:
+        return 403, {"error": str(exc)}
+
+    run = (manifest.get("batch") or {}).get("datasetRun") or {}
+    if run.get("state") != "published":
+        return 409, {"error": "Dataset run has not been published"}
+    snapshot_path = UPLOAD_STORAGE_DIR / str(batch_id) / "analytics.json"
+    if not snapshot_path.is_file():
+        return 409, {"error": "Dataset analysis snapshot is not ready"}
+    try:
+        snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        return 500, {"error": "Dataset analysis snapshot is invalid"}
+
+    evidence = decision.pop("comparativeEvidence", None)
+    if evidence is None:
+        evidence = snapshot.get("comparativeEvidence") or snapshot.get("evidence_ids") or retrieve_dataset_comparative_evidence(snapshot)
+    result = run_dataset_graph(
+        snapshot,
+        run_id=str(run.get("publishedAt") or batch_id),
+        graph_version=str(snapshot.get("graphVersion") or "mia-graph-v1"),
+        evidence_ids=evidence,
+        review_decision=decision,
+        retry=True,
+        checkpointer=MIA_GRAPH_CHECKPOINTER,
+    )
+    snapshot_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    run["analysisState"] = "ready"
+    run["reviewState"] = status
+    run["publicationState"] = result["publication_state"]
+    run.setdefault("analysisAttempts", []).append({"attempt": result.get("attempt", 1), "publicationState": result.get("publication_state"), "reviewStatus": status, "reviewerId": decision.get("reviewerId")})
+    run.setdefault("events", []).append(event_envelope("dataset-run.reviewed", manifest))
+    _write_upload_batch_manifest(manifest)
+    return 200, {"snapshot": result, "datasetRun": run}
+
+
 def list_owned_dataset_runs(identity):
     runs = []
     if not UPLOAD_STORAGE_DIR.is_dir():
@@ -2839,7 +3565,7 @@ def admin_conversation_logs(limit=100):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT m.role, m.message_text, m.created_at, m.session_id, s.user_id, u.username
+                SELECT m.role, m.message_text, m.created_at, m.session_id, s.user_id, s.route_focus, u.username
                 FROM chat_messages m
                 JOIN chat_sessions s ON s.id = m.session_id
                 JOIN app_users u ON u.id = s.user_id
@@ -2890,7 +3616,7 @@ def user_history(identity, limit=100):
 def admin_observability():
     conn = connect_db()
     if conn is None:
-        return {"connected": False, "layers": [], "tokens": {"input": 0, "output": 0, "total": 0, "requests": 0}, "users": []}
+        return {"connected": False, "layers": [], "routeMonitoring": [], "tokens": {"input": 0, "output": 0, "total": 0, "requests": 0}, "users": []}
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -2926,9 +3652,39 @@ def admin_observability():
                 """
             )
             layers = [dict(row) for row in cur.fetchall()]
+            cur.execute(
+                """
+                SELECT s.route_focus AS route_key,
+                       CASE s.route_focus
+                         WHEN 'dover-calais' THEN 'Dover-Calais'
+                         WHEN 'newhaven-dieppe' THEN 'Newhaven-Dieppe'
+                         WHEN 'newcastle-ijmuiden' THEN 'Newcastle-IJmuiden'
+                         WHEN 'jersey' THEN 'Jersey / Channel Islands'
+                         ELSE 'All signals'
+                       END AS route_name,
+                       COUNT(event.id) AS requests,
+                       COALESCE(SUM(event.total_tokens), 0) AS total_tokens,
+                       ROUND(AVG(event.latency_ms), 1) AS avg_latency_ms,
+                       COALESCE(SUM(event.records), 0) AS records,
+                       MAX(event.created_at) AS last_seen_at
+                FROM (
+                    SELECT e.id, e.chat_session_id, e.total_tokens, e.created_at,
+                           COALESCE(SUM((layer->>'durationMs')::numeric), 0) AS latency_ms,
+                           COALESCE(SUM((layer->>'records')::integer), 0) AS records
+                    FROM rag_usage_events e
+                    CROSS JOIN LATERAL jsonb_array_elements(e.retrieval_trace->'layers') AS layer
+                    WHERE e.created_at >= NOW() - INTERVAL '24 hours'
+                    GROUP BY e.id, e.chat_session_id, e.total_tokens, e.created_at
+                ) AS event
+                JOIN chat_sessions s ON s.id = event.chat_session_id
+                GROUP BY s.route_focus
+                ORDER BY requests DESC, route_name
+                """
+            )
+            route_monitoring = summarize_route_monitoring([dict(row) for row in cur.fetchall()])
     finally:
         conn.close()
-    return {"connected": True, "tokens": {"input": int(tokens["input_tokens"]), "output": int(tokens["output_tokens"]), "total": int(tokens["total_tokens"]), "requests": int(tokens["requests"])}, "layers": layers, "users": users}
+    return {"connected": True, "demo": {"batch": "demo_agent_monitoring_v1", "events": 150}, "tokens": {"input": int(tokens["input_tokens"]), "output": int(tokens["output_tokens"]), "total": int(tokens["total_tokens"]), "requests": int(tokens["requests"])}, "layers": layers, "users": users, "routeMonitoring": route_monitoring}
 
 
 def store_chat_turn(payload, answer, rag_context, identity=None):
@@ -3034,7 +3790,7 @@ def filter_review_seed_items(items, params):
 
 def normalize_review_row(row):
     item = dict(row)
-    for key in ["metadata", "evidence_chain", "artifacts"]:
+    for key in ["metadata", "evidence_chain", "artifacts", "action_history"]:
         value = item.get(key)
         if isinstance(value, str):
             try:
@@ -3067,7 +3823,14 @@ def list_review_items(params=None):
                 SELECT id, subject_type, subject_id, subject_label, layer, status, severity,
                        title, reason, recommendation, publish_state, route_key, source_key,
                        language, original_output, supervisor_verdict, suggested_fix,
-                       downstream_impact, metadata, created_at, updated_at
+                       downstream_impact, metadata, created_at, updated_at,
+                       COALESCE((SELECT jsonb_agg(jsonb_build_object(
+                         'id', a.id, 'action', a.action_type, 'actor', a.actor_name,
+                         'actorId', a.actor_id, 'rationale', a.notes, 'correction', a.correction,
+                         'previousStatus', a.previous_status, 'nextStatus', a.next_status,
+                         'graphRunId', a.graph_run_id, 'traceId', a.trace_id, 'createdAt', a.created_at
+                       ) ORDER BY a.created_at DESC) FROM review_item_actions a
+                       WHERE a.review_item_id = review_items.id), '[]'::jsonb) AS action_history
                 FROM review_items
                 ORDER BY created_at DESC, id DESC
                 LIMIT 200
@@ -3117,6 +3880,142 @@ def update_review_item_status(item_id, payload):
             )
         conn.commit()
         return 200, {"item": dict(row)}
+    finally:
+        conn.close()
+
+
+def apply_review_action(item_id, payload, identity):
+    """Apply one auditable human review action, safely replayable by idempotency key."""
+    action = str(payload.get("action") or "").strip().lower()
+    rationale = str(payload.get("rationale") or payload.get("notes") or "").strip()[:4000]
+    correction = str(payload.get("correction") or "").strip()[:8000]
+    idempotency_key = str(payload.get("idempotencyKey") or uuid.uuid4())[:180]
+    actor_id = str((identity or {}).get("id") or "")
+    actor_name = str((identity or {}).get("username") or (identity or {}).get("name") or "Internal reviewer")[:120]
+    graph_run_id = str(payload.get("graphRunId") or "")[:180]
+    trace_id = str(payload.get("traceId") or "")[:180]
+    if not actor_id:
+        return 401, {"error": "Authenticated reviewer is required"}
+    if not rationale:
+        return 400, {"error": "A rationale is required for every review action"}
+    if action == "correct" and not correction:
+        return 400, {"error": "Correction content is required for a correction action"}
+    if action not in {"approve", "correct", "reject", "withdraw", "request_reanalysis"}:
+        return 400, {"error": f"Unsupported review action: {action}"}
+
+    conn = connect_db()
+    if conn is None:
+        return 503, {"error": "Database is not connected; seed review items are read-only"}
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, status, publish_state, metadata FROM review_items WHERE id = %s FOR UPDATE",
+                (item_id,),
+            )
+            item = cur.fetchone()
+            if item is None:
+                conn.rollback()
+                return 404, {"error": "Review item not found"}
+            cur.execute(
+                """SELECT id, action_type, previous_status, next_status, notes,
+                          correction, actor_id, actor_name, graph_run_id, trace_id, created_at
+                   FROM review_item_actions
+                   WHERE review_item_id = %s AND idempotency_key = %s""",
+                (item_id, idempotency_key),
+            )
+            existing = cur.fetchone()
+            if existing is not None:
+                conn.rollback()
+                return 200, {"replayed": True, "action": dict(existing)}
+            current_status = str(item["status"] if isinstance(item, dict) else item[1])
+            try:
+                transition = transition_for_action(current_status, action)
+            except ValueError as exc:
+                conn.rollback()
+                return 409, {"error": str(exc), "status": current_status}
+            metadata = item["metadata"] if isinstance(item, dict) else item[3]
+            metadata = dict(metadata or {})
+            if graph_run_id:
+                metadata["graph_run_id"] = graph_run_id
+            if trace_id:
+                metadata["trace_id"] = trace_id
+            cur.execute(
+                """UPDATE review_items
+                   SET status = %s, publish_state = %s, metadata = %s::jsonb, updated_at = NOW()
+                   WHERE id = %s""",
+                (transition["next_status"], transition["publish_state"], json.dumps(metadata), item_id),
+            )
+            cur.execute(
+                """INSERT INTO review_item_actions
+                   (review_item_id, actor_type, actor_id, actor_name, action_type, notes,
+                    graph_run_id, trace_id, previous_status, next_status, correction, idempotency_key)
+                   VALUES (%s, 'human', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                   RETURNING id, action_type, previous_status, next_status,
+                             notes, correction, actor_id, actor_name, graph_run_id, trace_id, created_at""",
+                (item_id, actor_id, actor_name, action, rationale, graph_run_id, trace_id,
+                 current_status, transition["next_status"], correction, idempotency_key),
+            )
+            record = dict(cur.fetchone())
+        conn.commit()
+        return 200, {"replayed": False, "item": {"id": int(item_id), "status": transition["next_status"], "publish_state": transition["publish_state"]}, "action": record}
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def queue_graph_review_item(*, graph_name, graph_run_id, trace_id, title, reason,
+                            recommendation, evidence_ids, route_key="all"):
+    """Persist one pending graph artifact without storing raw prompt or upload content."""
+    conn = connect_db()
+    if conn is None:
+        return None
+    item = review_item_payload_for_graph(
+        graph_name=graph_name, graph_run_id=graph_run_id, trace_id=trace_id, title=title,
+        reason=reason, recommendation=recommendation, evidence_ids=evidence_ids, route_key=route_key,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO review_runs (run_key, run_type, trigger_source, status, summary, metadata)
+                   VALUES (%s, %s, 'graph', 'pending_human_review', %s, %s::jsonb)
+                   ON CONFLICT (run_key) DO UPDATE SET status = EXCLUDED.status, metadata = EXCLUDED.metadata
+                   RETURNING id""",
+                (f"{graph_name}:{graph_run_id}", f"{graph_name}_graph", item["title"], json.dumps(item["metadata"])),
+            )
+            run_id = cur.fetchone()["id"]
+            cur.execute(
+                "SELECT id FROM review_items WHERE run_id = %s AND subject_id = %s",
+                (run_id, item["subject_id"]),
+            )
+            existing = cur.fetchone()
+            if existing:
+                conn.commit()
+                return int(existing["id"])
+            cur.execute(
+                """INSERT INTO review_items
+                   (run_id, subject_type, subject_id, subject_label, layer, status, severity,
+                    title, reason, recommendation, publish_state, route_key, source_key, metadata)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                   RETURNING id""",
+                (run_id, item["subject_type"], item["subject_id"], item["subject_label"], item["layer"],
+                 item["status"], item["severity"], item["title"], item["reason"], item["recommendation"],
+                 item["publish_state"], item["route_key"], item["source_key"], json.dumps(item["metadata"])),
+            )
+            review_item_id = cur.fetchone()["id"]
+            cur.execute(
+                """INSERT INTO review_item_actions
+                   (review_item_id, actor_type, actor_name, action_type, notes, graph_run_id, trace_id,
+                    previous_status, next_status)
+                   VALUES (%s, 'system', 'Mia graph', 'queued', %s, %s, %s, 'draft', 'pending_human_review')""",
+                (review_item_id, item["reason"], graph_run_id, trace_id),
+            )
+        conn.commit()
+        return int(review_item_id)
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
@@ -3221,7 +4120,7 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(static_dir), **kwargs)
 
     def send_json(self, status, payload):
-        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        body = json_response_body(payload)
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         origin = self.headers.get("Origin")
@@ -3238,7 +4137,7 @@ class Handler(SimpleHTTPRequestHandler):
         if origin in LOGIN_APP_ORIGINS:
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
-            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
             self.send_header("Vary", "Origin")
         self.end_headers()
 
@@ -3330,6 +4229,13 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/governance/production-readiness":
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not has_capability(identity, "governance_admin"):
+                self.send_json(403, {"error": "Governance administrator access is required"})
+                return
+            self.send_json(200, production_readiness())
+            return
         if parsed.path == "/api/history":
             identity = identity_from_authorization(self.headers.get("Authorization"))
             if not identity:
@@ -3342,6 +4248,9 @@ class Handler(SimpleHTTPRequestHandler):
             return
         if parsed.path == "/api/review-items":
             self.send_json(200, list_review_items(parse_qs(parsed.query)))
+            return
+        if parsed.path.startswith("/api/review-items/") and parsed.path.endswith("/actions"):
+            self.send_json(405, {"error": "POST is required for review actions"})
             return
         if parsed.path == "/api/admin/observability":
             identity = identity_from_authorization(self.headers.get("Authorization"))
@@ -3360,6 +4269,33 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(200, admin_conversation_logs(raw_limit))
             except ValueError:
                 self.send_json(400, {"error": "limit must be a number"})
+            return
+        if parsed.path.startswith("/api/admin/evaluations/") and not parsed.path.endswith("/calibration"):
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not identity or identity["role"] != "administrator":
+                self.send_json(403, {"error": "Administrator access is required"})
+                return
+            status, payload = admin_evaluation_detail(parsed.path.split("/")[4])
+            self.send_json(status, payload)
+            return
+        if parsed.path == "/api/admin/evaluations":
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not identity or identity["role"] != "administrator":
+                self.send_json(403, {"error": "Administrator access is required"})
+                return
+            conn = connect_db()
+            if conn is None:
+                self.send_json(503, {"error": "Database is required for evaluation history"})
+                return
+            try:
+                with conn.cursor() as cur:
+                    cur.execute("""SELECT r.id, s.version AS evaluation_set_version, r.status, r.promotion_state, r.reasons, r.metrics, r.trace_id, r.started_at, r.completed_at
+                                   FROM mia_evaluation_runs r JOIN mia_evaluation_set_versions s ON s.id = r.evaluation_set_id
+                                   ORDER BY r.started_at DESC LIMIT 50""")
+                    rows = [dict(row) for row in cur.fetchall()]
+                self.send_json(200, {"runs": rows})
+            finally:
+                conn.close()
             return
         if parsed.path == "/api/source-workbook":
             self.source_workbook_page(parse_qs(parsed.query))
@@ -3456,6 +4392,18 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/governance/production-mode":
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not has_capability(identity, "governance_admin"):
+                self.send_json(403, {"error": "Governance administrator access is required"})
+                return
+            try:
+                self.send_json(200, enable_production_mode(identity))
+            except RuntimeError as exc:
+                self.send_json(409, {"error": str(exc), "governance": production_readiness()})
+            except PermissionError as exc:
+                self.send_json(403, {"error": str(exc)})
+            return
         if parsed.path in {"/api/auth/register", "/api/auth/login"}:
             length = int(self.headers.get("Content-Length", "0"))
             try:
@@ -3480,7 +4428,66 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             self.send_json(200, {"accessToken": create_access_session(identity), "user": identity})
             return
+        calibration_path = parsed.path.startswith("/api/admin/evaluations/") and parsed.path.endswith("/calibration")
+        if parsed.path in {"/api/admin/evaluation-sets/freeze", "/api/admin/evaluations", "/api/admin/evaluation-baselines", "/api/admin/mia-triggers/external-refresh", "/api/admin/mia-triggers/version-change"} or calibration_path:
+            try:
+                require_production_ready()
+            except PermissionError as exc:
+                self.send_json(503, {"error": str(exc)})
+                return
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not identity or identity["role"] != "administrator":
+                self.send_json(403, {"error": "Administrator access is required"})
+                return
+            try:
+                payload = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))).decode("utf-8"))
+            except (ValueError, json.JSONDecodeError):
+                self.send_json(400, {"error": "Invalid JSON"})
+                return
+            if parsed.path.endswith("/freeze"):
+                status, result = freeze_evaluation_set(payload, identity)
+                self.send_json(status, result)
+                return
+            if parsed.path.endswith("evaluation-baselines"):
+                status, result = set_evaluation_baseline(payload, identity)
+                self.send_json(status, result)
+                return
+            if calibration_path:
+                run_id = parsed.path.split("/")[4]
+                status, result = record_human_calibration(run_id, payload, identity)
+                self.send_json(status, result)
+                return
+            if parsed.path.endswith("/external-refresh"):
+                try:
+                    self.send_json(202, process_external_refresh_event(payload))
+                except (KeyError, ValueError) as exc:
+                    self.send_json(422, {"error": str(exc)})
+                except Exception:
+                    self.send_json(500, {"error": "External refresh trigger failed"})
+                return
+            if parsed.path.endswith("/version-change"):
+                try:
+                    self.send_json(202, process_component_version_event(payload))
+                except (KeyError, ValueError) as exc:
+                    self.send_json(422, {"error": str(exc)})
+                except Exception:
+                    self.send_json(500, {"error": "Version change trigger failed"})
+                return
+            try:
+                self.send_json(201, run_frozen_evaluation(payload.get("evaluationSetId"), identity))
+            except ValueError as exc:
+                self.send_json(409, {"error": str(exc)})
+            except RuntimeError as exc:
+                self.send_json(503, {"error": str(exc)})
+            except Exception:
+                self.send_json(500, {"error": "Evaluation execution failed"})
+            return
         if parsed.path == "/api/upload-batches":
+            try:
+                require_production_ready()
+            except PermissionError as exc:
+                self.send_json(503, {"error": str(exc)})
+                return
             identity = identity_from_authorization(self.headers.get("Authorization"))
             if not identity:
                 self.send_json(401, {"error": "Sign in is required"})
@@ -3504,6 +4511,7 @@ class Handler(SimpleHTTPRequestHandler):
                 manifest = prepare_batch(files, UPLOAD_STORAGE_DIR, owner_id=identity["id"])
                 manifest["batch"]["sourceType"] = source_type
                 _write_upload_batch_manifest(manifest)
+                persist_upload_batch_lineage(manifest)
             except UploadValidationError as exc:
                 self.send_json(400, {"error": str(exc)})
                 return
@@ -3532,6 +4540,20 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(403, {"error": str(exc)})
             except (UploadValidationError, ValueError) as exc:
                 self.send_json(422, {"error": str(exc)})
+            return
+
+        if parsed.path.startswith("/api/upload-batches/") and parsed.path.endswith("/analysis/review"):
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not identity:
+                self.send_json(401, {"error": "Sign in is required"})
+                return
+            try:
+                payload = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))).decode("utf-8"))
+            except (ValueError, json.JSONDecodeError):
+                self.send_json(400, {"error": "Invalid JSON"})
+                return
+            status, response = review_dataset_run(parsed.path.split("/")[3], identity, payload)
+            self.send_json(status, response)
             return
 
         if parsed.path.startswith("/api/upload-batches/") and (parsed.path.endswith("/publish") or parsed.path.endswith("/analysis/retry")):
@@ -3563,7 +4585,29 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(400, {"error": "Invalid batch identifier"})
             return
 
+        if parsed.path.startswith("/api/review-items/") and parsed.path.endswith("/actions"):
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not identity or identity.get("role") != "administrator":
+                self.send_json(403, {"error": "Administrator access is required"})
+                return
+            try:
+                payload = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))).decode("utf-8"))
+            except (ValueError, json.JSONDecodeError):
+                self.send_json(400, {"error": "Invalid JSON"})
+                return
+            item_id = parsed.path.split("/")[-2]
+            try:
+                status, response = apply_review_action(item_id, payload, identity)
+            except (ValueError, KeyError):
+                status, response = 400, {"error": "Invalid review action payload"}
+            self.send_json(status, response)
+            return
+
         if parsed.path.startswith("/api/review-items/") and parsed.path.endswith("/status"):
+            identity = identity_from_authorization(self.headers.get("Authorization"))
+            if not identity or identity.get("role") != "administrator":
+                self.send_json(403, {"error": "Administrator access is required"})
+                return
             length = int(self.headers.get("Content-Length", "0"))
             try:
                 payload = json.loads(self.rfile.read(length).decode("utf-8"))
@@ -3626,9 +4670,18 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(422, {"error": str(exc)})
                 return
 
-        graph = build_conversation_graph(ServerConversationServices(payload, identity))
+        request_id = str(payload.get("sessionId") or uuid.uuid4())
+        graph = build_conversation_graph(ServerConversationServices(payload, identity), checkpointer=MIA_GRAPH_CHECKPOINTER)
         synthesis_started = time.perf_counter()
-        graph_state = graph.invoke({"message": str(payload["message"]), "actor_id": str(identity["id"]), "request_id": str(payload.get("sessionId") or uuid.uuid4())})
+        trace_state = {
+            "graph": "conversation", "graph_version": "mia-graph-v1", "request_id": request_id,
+            "retrieval_version": "hybrid-retrieval-v1", "prompt_version": "conversation-answer-v1", "config_version": "mia-config-v1",
+        }
+        with RedactedTracer(configured_langfuse_client()).span("mia.conversation.run", trace_state) as span:
+            graph_state = graph.invoke(
+                {"message": str(payload["message"]), "actor_id": str(identity["id"]), "request_id": request_id, "graph_version": "mia-graph-v1", "idempotency_key": hashlib.sha256(f"conversation:{identity['id']}:{request_id}".encode("utf-8")).hexdigest(), "trace_id": span.trace_id},
+                config={"configurable": {"thread_id": f"conversation:{request_id}"}},
+            )
         status = graph_state.get("status", 500)
         result = graph_state.get("result", {"error": "Conversation graph did not return an answer"})
         rag_context = graph_state.get("rag_context", {"retrieval": {"layers": []}})
@@ -3636,13 +4689,28 @@ class Handler(SimpleHTTPRequestHandler):
             {"name": "response_synthesis", "durationMs": round((time.perf_counter() - synthesis_started) * 1000, 1), "records": 1 if status == 200 else 0}
         )
         result["graph"] = graph_audit_record({
-            "graph": "conversation", "graph_version": "mia-graph-v1", "request_id": graph_state.get("request_id"),
+            "graph": "conversation", "graph_version": "mia-graph-v1", "request_id": graph_state.get("request_id"), "trace_id": graph_state.get("trace_id"),
             "status": graph_state.get("publication_state", "failed"), "evidence_ids": graph_state.get("evidence_ids", []),
             "verdict": (graph_state.get("review") or {}).get("reasons", []),
         })
         record_graph_audit(result["graph"])
         result["review"] = graph_state.get("review", {})
         result["publicationState"] = graph_state.get("publication_state", "failed")
+        if result["publicationState"] == "pending_human_review":
+            try:
+                review_item_id = queue_graph_review_item(
+                    graph_name="conversation",
+                    graph_run_id=str(graph_state.get("request_id") or request_id),
+                    trace_id=str(result["graph"].get("trace_id") or ""),
+                    title="Mia conversation requires human review",
+                    reason="; ".join((graph_state.get("review") or {}).get("reasons") or ["Review policy requires approval"]),
+                    recommendation=str((graph_state.get("answer") or {}).get("recommendation") or ""),
+                    evidence_ids=[str(item) for item in graph_state.get("evidence_ids") or []],
+                    route_key=str(payload.get("routeKey") or "all"),
+                )
+                result["reviewItemId"] = review_item_id
+            except Exception:
+                result["reviewPersistence"] = "unavailable"
         if status == 200:
             usage = measure_usage(payload, result.get("answer", ""), rag_context, result.get("providerUsage"))
             session_id = store_chat_turn(payload, result.get("answer", ""), rag_context, identity)
@@ -3668,10 +4736,41 @@ class Handler(SimpleHTTPRequestHandler):
                 result["validation"] = {
                     "error": f"Validation harness failed: {exc}",
                 }
+        trace_state.update({
+            "trace_id": graph_state.get("trace_id"),
+            "status": status,
+            "publication_state": result.get("publicationState"),
+            "evidence_ids": graph_state.get("evidence_ids", []),
+            "model_usage": result.get("usage") or result.get("providerUsage") or {},
+            "validation_verdict": result.get("validation") or {},
+            "final_outcome": result.get("publicationState") or ("returned" if status == 200 else "failed"),
+        })
+        record_graph_result_trace(configured_langfuse_client(), name="mia.conversation.result", state=trace_state, trace_id=graph_state.get("trace_id"))
         self.send_json(status, result)
+
+    def do_DELETE(self):
+        parsed = urlparse(self.path)
+        if not (parsed.path.startswith("/api/upload-batches/") and parsed.path.count("/") == 3):
+            self.send_json(404, {"error": "Not found"})
+            return
+        identity = identity_from_authorization(self.headers.get("Authorization"))
+        if not identity:
+            self.send_json(401, {"error": "Sign in is required"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length else {}
+        except (ValueError, json.JSONDecodeError):
+            self.send_json(400, {"error": "Invalid JSON"})
+            return
+        status, response = delete_upload_batch(
+            parsed.path.split("/")[3], identity, str(payload.get("reason") or "User deletion request")[:500]
+        )
+        self.send_json(status, response)
 
 
 def main():
+    global MIA_GRAPH_CHECKPOINTER
     load_local_env()
     database_ready = False
     try:
@@ -3679,16 +4778,19 @@ def main():
     except Exception as exc:
         print(f"Database initialization skipped: {exc}")
 
-    resume_dataset_run_outbox()
-
-    port = int(os.environ.get("PORT", "8766"))
-    # Render and other container platforms probe the public container interface.
-    host = os.environ.get("HOST", "0.0.0.0")
-    server = ThreadingHTTPServer((host, port), Handler)
-    print(f"DFDS dashboard listening on {host}:{port}")
-    print(f"Database-backed Evidence Knowledge Base: {'ready' if database_ready else 'not connected'}")
-    print("Set DEEPSEEK_API_KEY in .env or the shell for live LLM answers.")
-    server.serve_forever()
+    with checkpoint_session() as checkpointer:
+        MIA_GRAPH_CHECKPOINTER = checkpointer
+        if database_ready:
+            backfill_upload_batch_lineage()
+        resume_dataset_run_outbox()
+        port = int(os.environ.get("PORT", "8766"))
+        # Render and other container platforms probe the public container interface.
+        host = os.environ.get("HOST", "0.0.0.0")
+        server = ThreadingHTTPServer((host, port), Handler)
+        print(f"DFDS dashboard listening on {host}:{port}")
+        print(f"Database-backed Evidence Knowledge Base: {'ready' if database_ready else 'not connected'}")
+        print("Set DEEPSEEK_API_KEY in .env or the shell for live LLM answers.")
+        server.serve_forever()
 
 
 if __name__ == "__main__":

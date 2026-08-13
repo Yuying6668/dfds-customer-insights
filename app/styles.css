@@ -102,6 +102,36 @@ button {
 .login-switch { margin-top: 14px; border: 0; background: transparent; color: #176b4d; cursor: pointer; font-size: 13px; }
 .login-submit { display: flex; width: 100%; height: 50px; align-items: center; justify-content: center; gap: 12px; margin-top: 27px; border: 0; border-radius: 5px; color: #fff; background: #e4002b; font-weight: 700; transition: background .15s, transform .15s; }
 .login-submit:hover { background: #c90025; transform: translateY(-1px); }
+.workspace-entry-actions { display: grid; gap: 12px; margin-top: 28px; }
+.workspace-entry-actions .login-submit { margin-top: 0; }
+.login-secondary { display: flex; width: 100%; height: 50px; align-items: center; justify-content: center; gap: 12px; border: 1px solid #002b5c; border-radius: 5px; color: #002b5c; background: #fff; font-weight: 700; transition: background .15s, color .15s; }
+.login-secondary:hover { color: #fff; background: #002b5c; }
+.workspace-role { display: grid; gap: 8px; margin: 22px 0 0; padding: 0; border: 0; }
+.workspace-role legend { margin-bottom: 4px; color: #17263a; font-size: 13px; font-weight: 700; }
+.workspace-role label { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; margin: 0; padding: 12px; border: 1px solid #bdc9d7; border-radius: 5px; color: #17263a; font-size: 13px; font-weight: 700; }
+.workspace-role input { width: 16px; height: 16px; margin: 1px 0 0; accent-color: #002b5c; }
+.workspace-role span { grid-column: 2; margin-top: 3px; color: #64748b; font-size: 12px; font-weight: 400; }
+
+.agent-control { display: grid; gap: 22px; padding: 4px 0 28px; }
+.agent-control-header { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.agent-control-header h2 { margin: 0; color: var(--navy); font-size: 2rem; }
+.agent-control-header p:not(.eyebrow) { max-width: 680px; margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
+.agent-control-exit { display: inline-flex; flex: 0 0 auto; align-items: center; min-height: 38px; padding: 0 13px; border: 1px solid var(--blue); border-radius: 5px; color: var(--blue); font-size: .85rem; font-weight: 700; text-decoration: none; }
+.agent-control-exit:hover { color: #fff; background: var(--blue); }
+.agent-control-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.agent-control-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.agent-control-grid .table-wrap { max-height: 340px; overflow: auto; }
+.agent-control-grid .data-table { min-width: 540px; }
+.agent-conversations { display: grid; gap: 0; }
+.agent-conversations article { padding: 14px 0; border-top: 1px solid var(--line); }
+.agent-conversations article:first-child { padding-top: 0; border-top: 0; }
+.agent-conversations article div { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+.agent-conversations strong { color: var(--navy); font-size: .88rem; }
+.agent-conversations span { color: var(--muted); font-size: .75rem; }
+.agent-conversations p { margin: 6px 0 0; color: var(--ink); font-size: .86rem; line-height: 1.45; white-space: pre-wrap; }
+.agent-control-empty { max-width: 600px; padding: 28px; border: 1px solid #e8b9b5; border-left: 4px solid var(--red); background: #fff; }
+.agent-control-empty h2 { margin: 0 0 8px; color: var(--navy); }
+.agent-control-empty p:last-child { margin-bottom: 0; color: var(--muted); }
 
 @media (max-width: 850px) {
   .login-shell { grid-template-columns: 1fr; }
@@ -110,6 +140,11 @@ button {
   .login-copy h1 { font-size: 39px; }
   .login-pulse { display: none; }
   .login-footer { margin-top: auto; }
+}
+
+@media (max-width: 780px) {
+  .agent-control-header { align-items: flex-start; flex-direction: column; }
+  .agent-control-metrics, .agent-control-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {

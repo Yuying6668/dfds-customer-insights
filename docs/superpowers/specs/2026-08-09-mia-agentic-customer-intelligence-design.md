@@ -48,6 +48,10 @@ Trigger: a user publishes a validated internal dataset run, or a scheduled exter
 - Publish only a review-approved, versioned analytics snapshot; never automatically execute a recommendation.
 - Use the dataset run, analysis version, and graph version as an idempotency key. A repeated publish returns the existing result; a retry creates a new attempt, not a second dataset version.
 
+Implementation boundary: the graph consumes a normalized comparative-evidence contract and an explicit Review Console decision (`approved`, `corrected`, `rejected`, `withdrawn`, or `reanalyse`). It emits an immutable draft or published snapshot with recommendation owner, expected impact, limitations, confidence, and evidence IDs. The graph never treats evidence presence alone as approval; Review Console, Evaluation Graph, deletion propagation, and governance can be delivered independently against these contracts.
+
+The current service exposes `POST /api/upload-batches/{id}/analysis/review` for the owner-scoped Review Console bridge. It records the reviewer, decision reason, timestamp, attempt, and publication state in the batch manifest and analytics snapshot. Comparative evidence is populated from the approved public evidence retrieval layer and excludes synthetic-demo rows.
+
 #### 3. Evaluation and Monitoring Graph
 
 Trigger: a model, prompt, retriever, embedding, reranker, chunker, or graph-version change; optionally a scheduled evaluation run.
